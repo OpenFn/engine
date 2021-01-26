@@ -22,6 +22,7 @@ defmodule OpenFn.Engine.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:rambo, "~> 0.3.2"},
       {:yaml_elixir, "~> 2.5"},
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false}
       # {:dep_from_hexpm, "~> 0.3.0"},
