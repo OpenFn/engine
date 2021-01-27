@@ -16,6 +16,12 @@ def deps do
 end
 ```
 
+## Mix Tasks
+
+- `openfn.install.runtime`  
+  Assuming NodeJS is installed, it will install the latest versions of the most
+  basic language packs.
+
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/openfn_engine](https://hexdocs.pm/openfn_engine).

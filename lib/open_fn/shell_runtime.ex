@@ -9,6 +9,9 @@ defmodule OpenFn.ShellRuntime do
     )
   end
 
+  # TODO: doesn't actually modify stderr -> stdout but rather a callback to
+  # hook into log lines as they come in. Will need some kind of receiver to
+  # gather up the lines.
   defp stderr_to_stdout({_kind, line}), do: line
 
   def build_command(%{}) do
