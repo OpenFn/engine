@@ -4,8 +4,8 @@ defmodule OpenFn.MatcherTest do
 
   alias OpenFn.Matcher
 
-  test "greets the world" do
-    assert Matcher.hello() == :world
+  setup do
+    %{message: %{body: %{"a" => 1}}}
   end
 
   setup do
@@ -16,27 +16,12 @@ defmodule OpenFn.MatcherTest do
   #   assert Matcher.get_matches(jobs, message) == []
   # end
 
-  # test "configuration" do
-  #   config = ~S"""
-  #     {
-  #       "jobs": {
-  #         "job-1-id": {
-  #           "credential": "cred-1",
-  #           "expression": "https://github.com/openfn/sample/jobs/job1.js",
-  #           "trigger": "trigger-2"
-  #         }
-  #       },
-  #       "triggers": {
-  #         "trigger-2": {
-  #           "criteria": "{a:1}"
-  #         },
-  #         "trigger-wendy": {
-  #           "label": "every minute",
-  #           "cron": "* * * * *"
-  #         }
-  #       }
-  #     }
-  #   """
+    assert Matcher.get_matches(triggers, message) == trigger
+  end
+
+  test "is_match?/2", %{message: %{body: body}} do
+    assert Matcher.is_match?(body, [{"$.a", 1}])
+  end
 
   #   {:ok, pid} = Matcher.start_link(config)
 

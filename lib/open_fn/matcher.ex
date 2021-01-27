@@ -18,20 +18,35 @@ defmodule OpenFn.Matcher do
   end
 
   @doc """
-  Hello world.
+  Determines if a map of data matches the expectations using JSONPath.
 
-  ## Examples
+  Expects to be given a string-keyed map, and a list of expectation tuples.
 
-      iex> OpenFn.Engine.hello()
-      :world
-
+  ```
+  data = %{"a" => 1, "b" => %{"c" => 2}}
+  expectations = [{"$.a", 1}, {"$.b.c", 2}]
+  is_match?(data, expectations) # => true
+  ```
   """
-  def hello do
-    :world
+  def is_match?(%{} = data, expectations) do
+    expectations
+    |> Enum.map(fn {path, value} ->
+      {:ok, results} = ExJSONPath.eval(data, path)
+      Enum.at(results, 0) == value
+    end)
+    |> Enum.all?()
   end
 
-  def get_matches(jobs, message) do
-    []
-
-  end
+  # TODO: convert our criteria style triggers into list of expectations that
+  #       work with is_match?/2
+  # {
+  #   "Envelope": {
+  #     "Body": {
+  #       "notifications": {
+  #         "Notification": [],   <=== Must match that is a list, not an empty list
+  #         "OrganizationId": "00DA0000000CmO4MAK"
+  #       }
+  #     }
+  #   }
+  # }
 end
