@@ -7,6 +7,5 @@ defmodule OpenFn.CriteriaTrigger.UnitTest do
     assert CriteriaTrigger.to_expectations(%CriteriaTrigger{
              criteria: %{"formId" => "pula_household"}
            }) == [{"$.formId", "pula_household"}]
-
   end
 end

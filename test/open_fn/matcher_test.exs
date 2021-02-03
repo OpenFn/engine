@@ -2,7 +2,7 @@ defmodule OpenFn.Matcher.UnitTest do
   use ExUnit.Case
   doctest OpenFn.Matcher
 
-  alias OpenFn.{ Matcher, CriteriaTrigger }
+  alias OpenFn.{Matcher, CriteriaTrigger}
 
   setup do
     %{message: %{body: %{"a" => 1}}}
