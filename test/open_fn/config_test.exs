@@ -9,19 +9,22 @@ defmodule OpenFn.ConfigTest do
       jobs:
         job-1:
           expression: none
+          language_pack: language-common
           trigger: trigger-2
         job-2:
           expression: none
+          language_pack: language-common
           trigger: trigger-3
         job-3:
           expression: none
+          language_pack: language-common
           trigger: trigger-3
 
       triggers:
         trigger-2:
-          criteria: '{a:1}'
+          criteria: '{"a":1}'
         trigger-3:
-          criteria: '{b:2}'
+          criteria: '{"b":2}'
       """
     }
   end

@@ -45,7 +45,7 @@ defmodule Mix.Tasks.Openfn.Install.Runtime do
 
   def packages() do
     ~W(
-      @openfn/core@latest
+      @openfn/core@OpenFn/core#allow_npm_style
       @openfn/language-common@latest
     )
   end

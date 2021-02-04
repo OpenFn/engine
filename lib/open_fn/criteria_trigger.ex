@@ -13,7 +13,7 @@ defmodule OpenFn.CriteriaTrigger do
   #     }
   #   }
   # }
-  def to_expectations(%{criteria: criteria}) do
+  def to_expectations(%__MODULE__{criteria: criteria}) do
     criteria |> Enum.map(&to_expectation(&1, "$"))
   end
 

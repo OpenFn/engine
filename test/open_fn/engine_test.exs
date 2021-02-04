@@ -14,14 +14,10 @@ defmodule OpenFn.Engine.UnitTest do
   end
 
   test "execute_sync/2" do
-    body = """
-    {"a": 1}
-    """
+    body = Jason.decode!(~s({"a": 1}))
 
     expression = """
       alterState(state => {
-        console.log("dfgdfgdfgdfgdf")
-        console.log(state)
         return state
       })
     """
@@ -29,34 +25,42 @@ defmodule OpenFn.Engine.UnitTest do
     {:ok, %Result{} = result} =
       OpenFn.Engine.execute_sync(%Message{body: body}, %Job{
         expression: expression,
-        language_pack: "./\\@openfn/language-common.Adaptor"
+        language_pack: "@openfn/language-common"
       })
 
     assert result.exit_code == 0
-    IO.inspect(result.log)
-    File.read!(result.final_state_path) |> IO.inspect()
+    assert File.read!(result.final_state_path) == "{\n  \"a\": 1\n}"
   end
 
   test "handle_message/2" do
-    body = """
-    {"a": 1}
+    body = Jason.decode!(~s({"a": 1}))
+
+    config_yaml = ~S"""
+    jobs:
+      job-1:
+        expression: none
+        language_pack: @openfn/language-common
+        trigger: trigger-2
+      job-2:
+        expression: none
+        language_pack: @openfn/language-common
+        trigger: trigger-3
+      job-3:
+        expression: none
+        language_pack: @openfn/language-common
+        trigger: trigger-3
+
+    triggers:
+      trigger-2:
+        criteria: '{"a":1}'
+      trigger-3:
+        criteria: '{"b":2}'
     """
 
-    {:ok, results} = OpenFn.Engine.handle_message(%Config{}, %Message{body: body})
+    {:ok, config} = Config.parse(config_yaml)
+    [{:ok, result}] = OpenFn.Engine.handle_message(config, %Message{body: body})
 
-    IO.inspect(results)
+    IO.inspect(result)
     # File.read!(result.final_state_path) |> IO.inspect()
-  end
-
-  test "process_sync/2" do
-    body = """
-    {"a": 1}
-    """
-
-    expression = """
-      alterState(state => console.log(state))
-    """
-
-    OpenFn.Engine.process_sync(%{body: body})
   end
 end

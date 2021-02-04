@@ -35,12 +35,17 @@ defmodule OpenFn.Config do
 
     triggers =
       for {name, trigger_opts} <- trigger_data, into: [] do
-        %CriteriaTrigger{name: name, criteria: Map.get(trigger_opts, "criteria")}
+        {:ok, criteria} = Jason.decode(Map.get(trigger_opts, "criteria"))
+        %CriteriaTrigger{name: name, criteria: criteria}
       end
 
     jobs =
       for {name, job_opts} <- job_data, into: [] do
-        %Job{name: name, trigger: Map.get(job_opts, "trigger")}
+        %Job{
+          name: name,
+          trigger: Map.get(job_opts, "trigger"),
+          language_pack: Map.get(job_opts, "language_pack")
+        }
       end
 
     %__MODULE__{

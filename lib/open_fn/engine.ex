@@ -26,8 +26,9 @@ defmodule OpenFn.Engine do
 
     # Assemble state
     # TODO: find a home for setting up the state given the job type/trigger
-    File.write!(state_path, message.body)
-    File.write!(expression_path, job.expression)
+    # TODO: ensure sane default and helpful errors _before_ trying to execute
+    File.write!(state_path, Jason.encode!(message.body) )
+    File.write!(expression_path, job.expression || "")
 
     OpenFn.ShellRuntime.run(%RunSpec{
       state_path: state_path,
@@ -39,8 +40,11 @@ defmodule OpenFn.Engine do
 
   def handle_message(%Config{} = config, %Message{} = message) do
     triggers = Matcher.get_matches(config.triggers, message)
+    IO.inspect triggers
+    IO.inspect triggers
 
-    Enum.map(triggers, &Config.jobs_for(config, &1))
+    Config.jobs_for(config, triggers)
+    |> IO.inspect
     |> Enum.map(&execute_sync(message, &1))
   end
 end
