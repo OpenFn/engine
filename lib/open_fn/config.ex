@@ -8,6 +8,11 @@ defmodule OpenFn.Config do
 
   alias OpenFn.{CriteriaTrigger, Job}
 
+  def parse!(any) do
+    {:ok, config} = parse(any)
+    config
+  end
+
   def parse("file://" <> path) do
     YamlElixir.read_from_file(path)
     |> case do
@@ -44,7 +49,8 @@ defmodule OpenFn.Config do
         %Job{
           name: name,
           trigger: Map.get(job_opts, "trigger"),
-          language_pack: Map.get(job_opts, "language_pack")
+          language_pack: Map.get(job_opts, "language_pack"),
+          expression: Map.get(job_opts, "expression")
         }
       end
 

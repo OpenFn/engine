@@ -4,6 +4,7 @@ end
 
 defmodule OpenFn.ShellRuntime do
   alias OpenFn.{RunSpec, Result}
+  require Logger
 
   def run(%RunSpec{} = runspec, opts \\ %{}) do
     command = build_command(runspec)
@@ -14,7 +15,7 @@ defmodule OpenFn.ShellRuntime do
       # "PATH" => "..."
     }
 
-    IO.puts """
+    Logger.debug """
     env: #{Enum.map(env, fn ({k,v}) -> "#{k}=#{v}" end)}
     cmd: #{command}
     """
@@ -31,7 +32,7 @@ defmodule OpenFn.ShellRuntime do
     {msg,
      %Result{
        exit_code: res.status,
-       log: res.err || res.out,
+       log: res.err <> res.out,
        final_state_path: runspec.final_state_path
      }}
   end
@@ -39,11 +40,9 @@ defmodule OpenFn.ShellRuntime do
   # TODO: doesn't actually modify stderr -> stdout but rather a callback to
   # hook into log lines as they come in. Will need some kind of receiver to
   # gather up the lines.
-  defp stderr_to_stdout({_kind, line}), do: line |> IO.inspect()
+  defp stderr_to_stdout({_kind, line}), do: line
 
   def build_command(%RunSpec{} = runspec) do
-    # !
-    language_packs_path = ""
     test_mode = nil
     no_console = nil
 

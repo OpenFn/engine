@@ -40,11 +40,8 @@ defmodule OpenFn.Engine do
 
   def handle_message(%Config{} = config, %Message{} = message) do
     triggers = Matcher.get_matches(config.triggers, message)
-    IO.inspect triggers
-    IO.inspect triggers
 
     Config.jobs_for(config, triggers)
-    |> IO.inspect
     |> Enum.map(&execute_sync(message, &1))
   end
 end
