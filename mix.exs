@@ -6,6 +6,7 @@ defmodule OpenFn.Engine.MixProject do
       app: :openfn_engine,
       version: "0.1.0",
       elixir: "~> 1.10",
+      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
 
@@ -24,6 +25,8 @@ defmodule OpenFn.Engine.MixProject do
       mod: {OpenFn.Engine.Application, []}
     ]
   end
+
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
