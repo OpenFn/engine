@@ -40,20 +40,32 @@ defmodule TestSupervisor do
   end
 
   def init({application, otp_app, config, name, opts}) do
+    registry = [
+      meta: [config: setup_config(config)],
+      keys: :duplicate,
+      name: Module.concat(name, "Registry")
+    ]
+
     children = [
-      # {Foo, foo_spec}
+      {Registry, registry}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
   end
 
+  def setup_config(config) do
+    OpenFn.Config.parse!(config)
+  end
 end
 
 defmodule OpenFn.Engine.Application.UnitTest do
   use ExUnit.Case, async: true
 
+  import Engine.TestUtil
+
   test "" do
-    start_supervised!({TestApp, config: nil})
-    assert true
+    start_supervised!({TestApp, config: fixture(:project_config, :yaml)}) |> IO.inspect
+
+    {:ok, %OpenFn.Config{}} = Registry.meta(TestApp.Registry, :config)
   end
 end
