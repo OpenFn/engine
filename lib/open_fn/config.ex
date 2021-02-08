@@ -2,7 +2,74 @@ defmodule OpenFn.Config do
   @moduledoc """
   Configuration for an Engine process, parse/1 expects either a schema-based
   path or a string.
+
+  A config file has the following structure:
+
+  ```yaml
+  jobs:
+    job-one:
+      expression: >
+        alterState((state) => {
+          console.log("Hi there!")
+          return state;
+        })
+      language_pack: '@openfn/language-common'
+      trigger: trigger-one
+
+  triggers:
+    trigger-one:
+      criteria: '{"foo": "bar"}'
+    ...
+  ```
+
+  ## Top Level Elements
+
+  ### jobs
+
+  A list of jobs that can be executed, key'ed by their name.
+
+  The jobs key name must be URL safe.
+
+  **expression**
+
+  A string representing the JS expression that gets executed.
+
+  **language_pack**
+
+  The module to be used when executing the job. The module parameter is expected
+  to be compatible with NodeJS' `require` schemantics.
+  Assuming the modules were installed via NPM, the parameter looks like this:
+  `@openfn/language-common`.
+
+  This gets passed to the `--language` option in the core runtime.
+
+  **trigger**
+
+  The name of the trigger defined elsewhere in to the configuration.
+
+  ### triggers
+
+  The list of available triggers. Like `jobs`, they are key'ed by a URL safe name.
+
+  **criteria**
+
+  A JSON style matcher, which performs a 'contains' operation.
+
+  In this example JSON message, we want to trigger when it contains a specific
+  key/value pair.
+
+  ```
+  {"foo": "bar", "baz": "quux"}
+  ```
+  A criteria of `{"foo": "bar"}` would satisfy this test.
+
+  ```
+  {"foo": "bar", "baz": {"quux": 5}}
+  ```
+  A criteria of `{"baz": {"quux": 5}}` would also match this test.
+
   """
+
   defstruct jobs: [], triggers: []
   @type t :: %__MODULE__{jobs: any(), triggers: any()}
 
@@ -13,6 +80,9 @@ defmodule OpenFn.Config do
     config
   end
 
+  @doc """
+  Parse a config YAML file from the filesystem.
+  """
   def parse("file://" <> path) do
     YamlElixir.read_from_file(path)
     |> case do
@@ -24,6 +94,9 @@ defmodule OpenFn.Config do
     end
   end
 
+  @doc """
+  Parse a config string of YAML.
+  """
   def parse(str) do
     {:ok, data} = YamlElixir.read_from_string(str)
 
@@ -35,8 +108,8 @@ defmodule OpenFn.Config do
   """
   @spec from_map(map) :: Engine.Config.t()
   def from_map(data) do
-    trigger_data = Map.get(data, "triggers", %{})
-    job_data = Map.get(data, "jobs", %{})
+    trigger_data = data["triggers"]
+    job_data = data["jobs"]
 
     triggers =
       for {name, trigger_opts} <- trigger_data, into: [] do
