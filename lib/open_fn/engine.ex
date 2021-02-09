@@ -32,4 +32,13 @@ defmodule OpenFn.Engine do
     Config.jobs_for(config, triggers)
     |> Enum.map(&execute_sync(message, &1))
   end
+
+  def config(engine, key) when is_atom(key) do
+    Module.concat(engine, "Registry")
+    |> Registry.meta(key)
+    |> case do
+      {:ok, config} -> config
+      any -> any
+    end
+  end
 end

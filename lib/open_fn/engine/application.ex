@@ -1,19 +1,39 @@
 defmodule OpenFn.Engine.Application do
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
   @moduledoc false
 
-  use Application
+  defmacro __using__(opts) do
+    quote bind_quoted: [opts: opts] do
+      # Default the name of this app to the module
+      @mod_options Keyword.merge([name: __MODULE__], opts)
 
-  def start(_type, _args) do
-    children = [
-      # Starts a worker by calling: OpenFn.Engine.Worker.start_link(arg)
-      # {OpenFn.Engine.Worker, arg}
-    ]
+      def child_spec(opts) do
+        %{
+          id: __MODULE__,
+          start: {__MODULE__, :start_link, [opts]},
+          type: :supervisor
+        }
+      end
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: OpenFn.Engine.Supervisor]
-    Supervisor.start_link(children, opts)
+      def start_link(opts \\ []) do
+        opts = Keyword.merge(@mod_options, opts)
+
+        OpenFn.Engine.Supervisor.start_link(opts)
+      end
+
+      alias OpenFn.Message
+
+      def handle_message(%Message{} = message) do
+        OpenFn.Engine.handle_message(project_config!, message)
+      end
+
+      defp config(key) when is_atom(key) do
+        OpenFn.Engine.config(@mod_options[:name], key)
+      end
+
+      defp project_config! do
+        config(:project_config) ||
+          raise ArgumentError, "no :project_config configured for #{inspect(__MODULE__)}"
+      end
+    end
   end
 end

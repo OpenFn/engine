@@ -8,12 +8,12 @@ defmodule Engine.TestUtil do
 
   def has_ok_results(results) do
     assert length(results) > 0
-    assert Enum.all?(results, fn result ->
-      case result do
-        {:ok, %OpenFn.Result{}} -> true
-        _ -> false
-      end
-    end)
 
+    assert Enum.all?(results, fn result ->
+             case result do
+               {:ok, %OpenFn.Result{}} -> true
+               _ -> false
+             end
+           end)
   end
 end

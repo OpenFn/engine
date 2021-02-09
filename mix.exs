@@ -21,8 +21,7 @@ defmodule OpenFn.Engine.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger],
-      mod: {OpenFn.Engine.Application, []}
+      extra_applications: [:logger]
     ]
   end
 
