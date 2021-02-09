@@ -13,18 +13,40 @@
 defmodule TestApp do
   def child_spec(opts) do
     %{
-      id: "name", #name(opts),
+      # name(opts),
+      id: "name",
       start: {__MODULE__, :start_link, [opts]},
       type: :supervisor
     }
   end
 
   def start_link(opts \\ []) do
-    name = __MODULE__ #name(opts)
+    # name(opts)
+    name = __MODULE__
     otp_app = Keyword.get(opts, :otp_app, __MODULE__)
     config = Keyword.get(opts, :config, %{})
 
     TestSupervisor.start_link(__MODULE__, otp_app, config, name, opts)
+  end
+
+  alias OpenFn.Message
+
+  def handle_message(%Message{} = message) do
+    OpenFn.Engine.handle_message(project_config!, message)
+  end
+
+  defp config(key) when is_atom(key) do
+    Module.concat(__MODULE__, "Registry")
+    |> Registry.meta(key)
+    |> case do
+      {:ok, config} -> config
+      any -> any
+    end
+  end
+
+  defp project_config! do
+    config(:project_config) ||
+      raise ArgumentError, "no :project_config configured for #{inspect(__MODULE__)}"
   end
 end
 
@@ -41,7 +63,7 @@ defmodule TestSupervisor do
 
   def init({application, otp_app, config, name, opts}) do
     registry = [
-      meta: [config: setup_config(config)],
+      meta: [project_config: setup_config(config)],
       keys: :duplicate,
       name: Module.concat(name, "Registry")
     ]
@@ -63,9 +85,17 @@ defmodule OpenFn.Engine.Application.UnitTest do
 
   import Engine.TestUtil
 
-  test "" do
-    start_supervised!({TestApp, config: fixture(:project_config, :yaml)}) |> IO.inspect
+  alias OpenFn.Message
 
-    {:ok, %OpenFn.Config{}} = Registry.meta(TestApp.Registry, :config)
+  test "can the application, and give it config" do
+    start_supervised!({TestApp, config: fixture(:project_config, :yaml)})
+
+    {:ok, %OpenFn.Config{}} = Registry.meta(TestApp.Registry, :project_config)
+  end
+
+  test "can call handle_message without Config" do
+    start_supervised!({TestApp, config: fixture(:project_config, :yaml)})
+
+    assert has_ok_results(TestApp.handle_message(%Message{body: %{"b" => 2}}))
   end
 end
