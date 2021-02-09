@@ -23,7 +23,7 @@ defmodule OpenFn.Engine.Application do
       alias OpenFn.Message
 
       def handle_message(%Message{} = message) do
-        OpenFn.Engine.handle_message(project_config!, message)
+        OpenFn.Engine.handle_message(project_config!(), message)
       end
 
       defp config(key) when is_atom(key) do
