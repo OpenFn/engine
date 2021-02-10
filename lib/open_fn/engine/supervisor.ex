@@ -9,23 +9,22 @@ defmodule OpenFn.Engine.Supervisor do
   #   )
   # end
 
-  def start_link(opts) do
-    IO.inspect(opts, label: "Engine.Supervisor.start_link/1")
-    name =
-      opts[:name] ||
-        raise ArgumentError, "the :name option is required when starting OpenFn.Engine"
+  def start_link(config) do
+    name = config[:name] || raise ArgumentError, "the :name option is required when starting OpenFn.Engine"
+    config[:project_config] || raise ArgumentError, ":project_config is required to start an engine."
 
     sup_name = Module.concat(name, "Supervisor")
-    Supervisor.start_link(__MODULE__, opts, name: sup_name)
+    Supervisor.start_link(__MODULE__, config, name: sup_name)
   end
 
-  def init(opts) do
+  def init(config) do
+    name = config[:name]
+    IO.inspect({"...", name}, label: "Engine.Supervisor.init/1")
     # {application, otp_app, config, name, opts}
-    name = opts[:name]
-    config = opts[:config]
+    project_config = config[:project_config]
 
     registry = [
-      meta: [project_config: setup_config(config)],
+      meta: [project_config: setup_config(project_config)],
       keys: :duplicate,
       name: Module.concat(name, "Registry")
     ]
@@ -37,7 +36,19 @@ defmodule OpenFn.Engine.Supervisor do
     Supervisor.init(children, strategy: :one_for_one)
   end
 
-  def setup_config(config) do
-    OpenFn.Config.parse!(config)
+  def config(otp_app, module, opts) do
+    conf = case Application.fetch_env(otp_app, module) do
+      {:ok, conf} -> conf
+      :error -> []
+    end
+
+    defaults = [name: opts[:name] || module]
+
+    defaults |> Keyword.merge(conf) |> Keyword.merge(opts)
   end
+
+  def setup_config(project_config) do
+    OpenFn.Config.parse!(project_config)
+  end
+
 end

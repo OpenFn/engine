@@ -4,20 +4,22 @@ defmodule OpenFn.Engine.Application do
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
       # Default the name of this app to the module
-      @mod_options Keyword.merge([name: __MODULE__], opts)
+      @otp_app opts[:otp_app] || raise "engine expects :otp_app to be given"
+      @config OpenFn.Engine.Supervisor.config @otp_app, __MODULE__, opts
 
       def child_spec(opts) do
+        IO.inspect(["child_spec/1",opts], label: "__using__")
         %{
-          id: __MODULE__,
+          id: @config[:name],
           start: {__MODULE__, :start_link, [opts]},
           type: :supervisor
         }
       end
 
       def start_link(opts \\ []) do
-        opts = Keyword.merge(@mod_options, opts)
+        IO.inspect(["start_link/1", opts], label: "__using__")
 
-        OpenFn.Engine.Supervisor.start_link(opts)
+        OpenFn.Engine.Supervisor.start_link(@config)
       end
 
       alias OpenFn.Message
@@ -27,7 +29,7 @@ defmodule OpenFn.Engine.Application do
       end
 
       defp config(key) when is_atom(key) do
-        OpenFn.Engine.config(@mod_options[:name], key)
+        OpenFn.Engine.config(@config[:name], key)
       end
 
       defp project_config! do

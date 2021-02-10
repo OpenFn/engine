@@ -6,6 +6,16 @@ defmodule OpenFn.Engine do
   @spec child_spec(keyword) :: Supervisor.child_spec()
   defdelegate child_spec(options), to: OpenFn.Engine.Supervisor
 
+  use Application
+
+  @doc false
+  def start(_type, _args) do
+    children = []
+
+    opts = [strategy: :one_for_one]
+    Supervisor.start_link(children, opts)
+  end
+
   alias OpenFn.{Message, Job, RunSpec, Config, Matcher}
   def execute_sync(%Message{} = message, %Job{} = job) do
     {:ok, state_path} = Temp.path(%{prefix: "state", suffix: ".json"})

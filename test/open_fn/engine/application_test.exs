@@ -1,6 +1,12 @@
 defmodule TestApp do
   import Engine.TestUtil
-  use OpenFn.Engine.Application, config: fixture(:project_config, :yaml)
+  use OpenFn.Engine.Application,
+    project_config: fixture(:project_config, :yaml),
+    otp_app: :engine
+end
+
+defmodule AppConfigured do
+  use OpenFn.Engine.Application, otp_app: :openfn_engine
 end
 
 defmodule OpenFn.Engine.Application.UnitTest do
@@ -13,7 +19,7 @@ defmodule OpenFn.Engine.Application.UnitTest do
   test "can start Engine directly" do
     start_supervised!({
       OpenFn.Engine,
-      config: fixture(:project_config, :yaml), name: TestApp
+      [project_config: fixture(:project_config, :yaml), name: TestApp]
     })
 
     {:ok, %OpenFn.Config{}} = Registry.meta(TestApp.Registry, :project_config)
@@ -23,5 +29,11 @@ defmodule OpenFn.Engine.Application.UnitTest do
     start_supervised!(TestApp)
 
     assert has_ok_results(TestApp.handle_message(%Message{body: %{"b" => 2}}))
+  end
+
+  test "fetches config from otp_app" do
+    start_supervised!(AppConfigured)
+
+    assert has_ok_results(AppConfigured.handle_message(%Message{body: %{"b" => 2}}))
   end
 end
