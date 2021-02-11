@@ -6,7 +6,7 @@ defmodule OpenFn.ShellRuntime do
   alias OpenFn.{RunSpec, Result}
   require Logger
 
-  def run(%RunSpec{} = runspec, opts \\ %{}) do
+  def run(%RunSpec{} = runspec) do
     command = build_command(runspec)
 
     env = %{
@@ -36,11 +36,6 @@ defmodule OpenFn.ShellRuntime do
        final_state_path: runspec.final_state_path
      }}
   end
-
-  # TODO: doesn't actually modify stderr -> stdout but rather a callback to
-  # hook into log lines as they come in. Will need some kind of receiver to
-  # gather up the lines.
-  defp stderr_to_stdout({_kind, line}), do: line
 
   def build_command(%RunSpec{} = runspec) do
     test_mode = nil

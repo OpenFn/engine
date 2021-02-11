@@ -3,12 +3,10 @@ defmodule OpenFn.Engine.Application do
 
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
-      # Default the name of this app to the module
       @otp_app opts[:otp_app] || raise "engine expects :otp_app to be given"
       @config OpenFn.Engine.Supervisor.config @otp_app, __MODULE__, opts
 
       def child_spec(opts) do
-        IO.inspect(["child_spec/1",opts], label: "__using__")
         %{
           id: @config[:name],
           start: {__MODULE__, :start_link, [opts]},
@@ -17,8 +15,6 @@ defmodule OpenFn.Engine.Application do
       end
 
       def start_link(opts \\ []) do
-        IO.inspect(["start_link/1", opts], label: "__using__")
-
         OpenFn.Engine.Supervisor.start_link(@config)
       end
 

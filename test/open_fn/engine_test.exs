@@ -51,7 +51,6 @@ defmodule OpenFn.Engine.UnitTest do
     {:ok, config} = Config.parse(config_yaml)
     [{:ok, result}] = OpenFn.Engine.handle_message(config, %Message{body: body})
 
-    IO.inspect(result)
-    # File.read!(result.final_state_path) |> IO.inspect()
+    assert File.read!(result.final_state_path) == "{\n  \"a\": 1\n}"
   end
 end

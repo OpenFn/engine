@@ -1,10 +1,13 @@
 defmodule OpenFn.Engine.MixProject do
   use Mix.Project
 
+  @version "0.2.0"
+  @source_url "https://github.com/OpenFn/engine"
+
   def project do
     [
       app: :openfn_engine,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.10",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -12,7 +15,7 @@ defmodule OpenFn.Engine.MixProject do
 
       # Docs
       name: "OpenFn.Engine",
-      source_url: "https://github.com/OpenFn/engine",
+      source_url: @source_url,
       # homepage_url: "http://YOUR_PROJECT_HOMEPAGE",
       docs: docs()
     ]
