@@ -21,20 +21,19 @@ defmodule OpenFn.ShellRuntime do
     """
 
     # TODO: improve error handling and feedback when modules can't be found
-    {msg, res} =
-      Rambo.run("/usr/bin/env", ["sh", "-c", command],
-        env: env,
-        timeout: nil,
-        log: true # &stderr_to_stdout/1
-      )
-
     # TODO: stream stderr & stdout into Collectable - add that to %Result{}
-    {msg,
-     %Result{
+    Rambo.run("/usr/bin/env", ["sh", "-c", command],
+      env: env,
+      timeout: nil,
+      log: true # &stderr_to_stdout/1
+    ) |> case do
+      {:error, %Rambo{} = res} -> {:error, %Result{
        exit_code: res.status,
        log: res.err <> res.out,
        final_state_path: runspec.final_state_path
      }}
+      {:error, _} -> raise "Command failed to execute."
+    end
   end
 
   def build_command(%RunSpec{} = runspec) do
