@@ -15,24 +15,30 @@ defmodule OpenFn.ShellRuntime do
       # "PATH" => "..."
     }
 
-    Logger.debug """
-    env: #{Enum.map(env, fn ({k,v}) -> "#{k}=#{v}" end)}
+    Logger.debug("""
+    env: #{Enum.map(env, fn {k, v} -> "#{k}=#{v}" end)}
     cmd: #{command}
-    """
+    """)
 
     # TODO: improve error handling and feedback when modules can't be found
     # TODO: stream stderr & stdout into Collectable - add that to %Result{}
     Rambo.run("/usr/bin/env", ["sh", "-c", command],
       env: env,
       timeout: nil,
-      log: true # &stderr_to_stdout/1
-    ) |> case do
-      {:error, %Rambo{} = res} -> {:error, %Result{
-       exit_code: res.status,
-       log: res.err <> res.out,
-       final_state_path: runspec.final_state_path
-     }}
-      {:error, _} -> raise "Command failed to execute."
+      # &stderr_to_stdout/1
+      log: true
+    )
+    |> case do
+      {msg, %Rambo{} = res} ->
+        {msg,
+         %Result{
+           exit_code: res.status,
+           log: res.err <> res.out,
+           final_state_path: runspec.final_state_path
+         }}
+
+      {:error, _} ->
+        raise "Command failed to execute."
     end
   end
 
