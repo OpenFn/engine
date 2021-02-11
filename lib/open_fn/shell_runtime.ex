@@ -6,7 +6,7 @@ defmodule OpenFn.ShellRuntime do
   alias OpenFn.{RunSpec, Result}
   require Logger
 
-  def run(%RunSpec{} = runspec, opts \\ %{}) do
+  def run(%RunSpec{} = runspec) do
     command = build_command(runspec)
 
     env = %{
@@ -15,32 +15,32 @@ defmodule OpenFn.ShellRuntime do
       # "PATH" => "..."
     }
 
-    Logger.debug """
-    env: #{Enum.map(env, fn ({k,v}) -> "#{k}=#{v}" end)}
+    Logger.debug("""
+    env: #{Enum.map(env, fn {k, v} -> "#{k}=#{v}" end)}
     cmd: #{command}
-    """
+    """)
 
     # TODO: improve error handling and feedback when modules can't be found
-    {msg, res} =
-      Rambo.run("/usr/bin/sh", ["-c", command],
-        env: env,
-        timeout: nil,
-        log: true # &stderr_to_stdout/1
-      )
-
     # TODO: stream stderr & stdout into Collectable - add that to %Result{}
-    {msg,
-     %Result{
-       exit_code: res.status,
-       log: res.err <> res.out,
-       final_state_path: runspec.final_state_path
-     }}
-  end
+    Rambo.run("/usr/bin/env", ["sh", "-c", command],
+      env: env,
+      timeout: nil,
+      # &stderr_to_stdout/1
+      log: true
+    )
+    |> case do
+      {msg, %Rambo{} = res} ->
+        {msg,
+         %Result{
+           exit_code: res.status,
+           log: res.err <> res.out,
+           final_state_path: runspec.final_state_path
+         }}
 
-  # TODO: doesn't actually modify stderr -> stdout but rather a callback to
-  # hook into log lines as they come in. Will need some kind of receiver to
-  # gather up the lines.
-  defp stderr_to_stdout({_kind, line}), do: line
+      {:error, _} ->
+        raise "Command failed to execute."
+    end
+  end
 
   def build_command(%RunSpec{} = runspec) do
     test_mode = nil

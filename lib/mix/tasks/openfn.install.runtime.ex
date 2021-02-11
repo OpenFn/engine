@@ -35,9 +35,14 @@ defmodule Mix.Tasks.Openfn.Install.Runtime do
 
     System.cmd(
       "/usr/bin/env",
-      ~w(-C #{@default_path} npm install --no-save --no-package-lock --global-style #{
-        package_list
-      }),
+      [
+        "sh",
+        "-c",
+        "npm install --prefix $NODE_PATH --no-save --no-package-lock --global-style #{
+          package_list
+        }"
+      ],
+      env: [{"NODE_PATH", @default_path}],
       stderr_to_stdout: true,
       into: IO.stream(:stdio, :line)
     )

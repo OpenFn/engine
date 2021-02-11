@@ -4,15 +4,6 @@ defmodule OpenFn.Engine.UnitTest do
 
   alias OpenFn.{Message, Job, Result, Config}
 
-  describe "child_spec/1" do
-    test "expects a name" do
-      {:error, {{:EXIT, {exception, _}}, _}} = start_supervised({OpenFn.Engine, []})
-
-      assert Exception.message(exception) ==
-               "the :name option is required when starting OpenFn.Engine"
-    end
-  end
-
   test "execute_sync/2" do
     body = Jason.decode!(~s({"a": 1}))
 
@@ -60,7 +51,6 @@ defmodule OpenFn.Engine.UnitTest do
     {:ok, config} = Config.parse(config_yaml)
     [{:ok, result}] = OpenFn.Engine.handle_message(config, %Message{body: body})
 
-    IO.inspect(result)
-    # File.read!(result.final_state_path) |> IO.inspect()
+    assert File.read!(result.final_state_path) == "{\n  \"a\": 1\n}"
   end
 end

@@ -1,0 +1,23 @@
+jobs:
+  job-1:
+    expression: >
+      alterState((state) => {
+        console.log("Hi there!")
+        return state;
+      })
+    language_pack: '@openfn/language-common'
+    trigger: trigger-2
+  job-2:
+    expression: none
+    language_pack: '@openfn/language-common'
+    trigger: trigger-3
+  job-3:
+    expression: none
+    language_pack: '@openfn/language-common'
+    trigger: trigger-3
+
+triggers:
+  trigger-2:
+    criteria: '{"number":2}'
+  trigger-3:
+    criteria: '{"b":2}'

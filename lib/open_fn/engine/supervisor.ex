@@ -1,36 +1,46 @@
 defmodule OpenFn.Engine.Supervisor do
   use Supervisor
 
-  def start_link(opts) do
+  def start_link(config) do
     name =
-      opts[:name] ||
+      config[:name] ||
         raise ArgumentError, "the :name option is required when starting OpenFn.Engine"
 
+    config[:project_config] ||
+      raise ArgumentError, ":project_config is required to start an engine."
+
     sup_name = Module.concat(name, "Supervisor")
-    Supervisor.start_link(__MODULE__, opts, name: sup_name)
+    Supervisor.start_link(__MODULE__, config, name: sup_name)
   end
 
-  def init(opts) do
-    name = opts[:name]
-    # adapter = opts[:adapter] || Phoenix.PubSub.PG2
-    # adapter_name = Module.concat(name, "Adapter")
-
-    partitions =
-      opts[:pool_size] ||
-        System.schedulers_online() |> Kernel./(4) |> Float.ceil() |> trunc()
+  def init(config) do
+    # TODO: this would be the place to _receive_ compile-time config from
+    # the Application module (can also be empty), and then merge in runtime config
+    name = config[:name]
+    project_config = config[:project_config]
 
     registry = [
-      # meta: [pubsub: {adapter, adapter_name}],
-      partitions: partitions,
+      meta: [project_config: OpenFn.Config.parse!(project_config)],
       keys: :duplicate,
-      name: name
+      name: Module.concat(name, "Registry")
     ]
 
     children = [
       {Registry, registry}
-      # {adapter, Keyword.put(opts, :adapter_name, adapter_name)}
     ]
 
-    Supervisor.init(children, strategy: :rest_for_one)
+    Supervisor.init(children, strategy: :one_for_one)
+  end
+
+  def config(otp_app, module, opts) do
+    conf =
+      case Application.fetch_env(otp_app, module) do
+        {:ok, conf} -> conf
+        :error -> []
+      end
+
+    defaults = [name: opts[:name] || module]
+
+    defaults |> Keyword.merge(conf) |> Keyword.merge(opts)
   end
 end

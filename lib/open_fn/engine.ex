@@ -1,12 +1,3 @@
-defmodule OpenFn.Message do
-  @moduledoc """
-  Struct for holding information about an incoming message.
-
-  A Message is a bag of data containing the body of the payload.
-  """
-  defstruct body: nil
-end
-
 defmodule OpenFn.Engine do
   @moduledoc """
   Documentation for `OpenFn.Engine`.
@@ -15,10 +6,17 @@ defmodule OpenFn.Engine do
   @spec child_spec(keyword) :: Supervisor.child_spec()
   defdelegate child_spec(options), to: OpenFn.Engine.Supervisor
 
-  alias OpenFn.{Message, Job, RunSpec, Config, Matcher}
+  use Application
 
-  # TODO: define %Message{}, and %Job{} types
-  # TODO: can we deal with module name conflicts?
+  @doc false
+  def start(_type, _args) do
+    children = []
+
+    opts = [strategy: :one_for_one]
+    Supervisor.start_link(children, opts)
+  end
+
+  alias OpenFn.{Message, Job, RunSpec, Config, Matcher}
   def execute_sync(%Message{} = message, %Job{} = job) do
     {:ok, state_path} = Temp.path(%{prefix: "state", suffix: ".json"})
     {:ok, final_state_path} = Temp.path(%{prefix: "final_state", suffix: ".json"})
@@ -27,7 +25,7 @@ defmodule OpenFn.Engine do
     # Assemble state
     # TODO: find a home for setting up the state given the job type/trigger
     # TODO: ensure sane default and helpful errors _before_ trying to execute
-    File.write!(state_path, Jason.encode!(message.body) )
+    File.write!(state_path, Jason.encode!(message.body))
     File.write!(expression_path, job.expression || "")
 
     OpenFn.ShellRuntime.run(%RunSpec{
@@ -43,5 +41,14 @@ defmodule OpenFn.Engine do
 
     Config.jobs_for(config, triggers)
     |> Enum.map(&execute_sync(message, &1))
+  end
+
+  def config(engine, key) when is_atom(key) do
+    Module.concat(engine, "Registry")
+    |> Registry.meta(key)
+    |> case do
+      {:ok, config} -> config
+      any -> any
+    end
   end
 end
