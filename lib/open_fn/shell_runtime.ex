@@ -22,7 +22,7 @@ defmodule OpenFn.ShellRuntime do
 
     # TODO: improve error handling and feedback when modules can't be found
     {msg, res} =
-      Rambo.run("/usr/bin/sh", ["-c", command],
+      Rambo.run("/usr/bin/env", ["sh", "-c", command],
         env: env,
         timeout: nil,
         log: true # &stderr_to_stdout/1
