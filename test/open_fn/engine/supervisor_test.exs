@@ -1,5 +1,5 @@
 defmodule OpenFn.Engine.Supervisor.UnitTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   import Engine.TestUtil
   import Crontab.CronExpression

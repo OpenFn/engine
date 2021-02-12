@@ -3,9 +3,9 @@ defmodule OpenFn.Engine.Scheduler do
 
   use Quantum, otp_app: nil
 
-  def init(opts) do
-    IO.inspect(opts)
-  end
+  # def init(opts) do
+  #   IO.inspect(opts)
+  # end
 end
 
 defmodule OpenFn.Engine.Supervisor do
@@ -37,12 +37,10 @@ defmodule OpenFn.Engine.Supervisor do
 
     scheduler_jobs =
       OpenFn.Config.triggers(project_config, :cron)
-      |> Enum.map(
-        fn t -> {String.to_atom(t.name),
-         [schedule: t.cron, task: {IO, :puts, [t.name]}]
-        }
-       end)
-      |> Keyword.new
+      |> Enum.map(fn t ->
+        {String.to_atom(t.name), [schedule: t.cron, task: {IO, :puts, [t.name]}]}
+      end)
+      |> Keyword.new()
 
     # start scheduler around here
     children = [

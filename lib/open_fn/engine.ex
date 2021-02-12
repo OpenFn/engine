@@ -22,9 +22,6 @@ defmodule OpenFn.Engine do
     {:ok, final_state_path} = Temp.path(%{prefix: "final_state", suffix: ".json"})
     {:ok, expression_path} = Temp.path(%{prefix: "expression", suffix: ".js"})
 
-    # Assemble state
-    # TODO: find a home for setting up the state given the job type/trigger
-    # TODO: ensure sane default and helpful errors _before_ trying to execute
     File.write!(state_path, Jason.encode!(message.body))
     File.write!(expression_path, job.expression || "")
 
@@ -37,7 +34,7 @@ defmodule OpenFn.Engine do
   end
 
   def handle_message(%Config{} = config, %Message{} = message) do
-    triggers = Matcher.get_matches(config.triggers, message)
+    triggers = Matcher.get_matches(Config.triggers(config, :criteria), message)
 
     Config.jobs_for(config, triggers)
     |> Enum.map(&execute_sync(message, &1))
