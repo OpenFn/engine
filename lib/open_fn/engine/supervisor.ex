@@ -1,3 +1,13 @@
+defmodule OpenFn.Engine.Scheduler do
+  @moduledoc false
+
+  use Quantum, otp_app: nil
+
+  def init(opts) do
+    IO.inspect opts
+  end
+end
+
 defmodule OpenFn.Engine.Supervisor do
   use Supervisor
 
@@ -16,17 +26,21 @@ defmodule OpenFn.Engine.Supervisor do
   def init(config) do
     # TODO: this would be the place to _receive_ compile-time config from
     # the Application module (can also be empty), and then merge in runtime config
-    name = config[:name]
-    project_config = config[:project_config]
+    name = config[:name] |> IO.inspect
+    project_config = OpenFn.Config.parse!(config[:project_config])
+
+    project_config.triggers |> IO.inspect()
 
     registry = [
-      meta: [project_config: OpenFn.Config.parse!(project_config)],
+      meta: [project_config: project_config],
       keys: :duplicate,
       name: Module.concat(name, "Registry")
     ]
 
+    # start scheduler around here
     children = [
-      {Registry, registry}
+      {Registry, registry},
+      {OpenFn.Engine.Scheduler, [id: name, name: OpenFn.Engine.Scheduler]}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
@@ -43,4 +57,5 @@ defmodule OpenFn.Engine.Supervisor do
 
     defaults |> Keyword.merge(conf) |> Keyword.merge(opts)
   end
+
 end
