@@ -2,6 +2,7 @@ defmodule OpenFn.Engine.Supervisor.UnitTest do
   use ExUnit.Case, async: true
 
   import Engine.TestUtil
+  import Crontab.CronExpression
 
   test "can start directly" do
     start_supervised!(
@@ -9,6 +10,8 @@ defmodule OpenFn.Engine.Supervisor.UnitTest do
        [name: "Foo", project_config: fixture(:project_config, :yaml), otp_app: :engine]}
     )
 
+    assert Enum.count(OpenFn.Engine.Scheduler.jobs()) == 1
+    assert OpenFn.Engine.Scheduler.find_job(:"trigger-4").schedule == ~e[* * * * * *]
 
     # :observer.start()
 

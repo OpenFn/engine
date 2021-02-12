@@ -21,3 +21,5 @@ triggers:
     criteria: '{"number":2}'
   trigger-3:
     criteria: '{"b":2}'
+  trigger-4:
+    cron: '* * * * *'
