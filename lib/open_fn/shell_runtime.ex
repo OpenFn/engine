@@ -6,7 +6,7 @@ defmodule OpenFn.ShellRuntime do
   alias OpenFn.{RunSpec, Result}
   require Logger
 
-  def run(%RunSpec{} = runspec) do
+  def run(%RunSpec{} = runspec, rambo_opts \\ []) do
     command = build_command(runspec)
 
     env = %{
@@ -22,18 +22,24 @@ defmodule OpenFn.ShellRuntime do
 
     # TODO: improve error handling and feedback when modules can't be found
     # TODO: stream stderr & stdout into Collectable - add that to %Result{}
-    Rambo.run("/usr/bin/env", ["sh", "-c", command],
-      env: env,
-      timeout: nil,
-      # &stderr_to_stdout/1
-      log: true
+    Rambo.run(
+      "/usr/bin/env",
+      ["sh", "-c", command],
+      Keyword.merge(
+        [
+          env: env,
+          timeout: nil,
+          log: false
+        ],
+        rambo_opts
+      )
     )
     |> case do
       {msg, %Rambo{} = res} ->
         {msg,
          %Result{
            exit_code: res.status,
-           log: res.err <> res.out,
+           log: rambo_opts[:log] || (res.err <> res.out),
            final_state_path: runspec.final_state_path
          }}
 

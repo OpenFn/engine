@@ -79,6 +79,10 @@ defmodule OpenFn.Config do
 
   alias OpenFn.{CriteriaTrigger, CronTrigger, Job}
 
+  def new(fields) do
+    struct!(__MODULE__, fields)
+  end
+
   def parse!(any) do
     {:ok, config} = parse(any)
     config

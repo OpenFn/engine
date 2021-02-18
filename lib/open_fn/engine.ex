@@ -16,7 +16,8 @@ defmodule OpenFn.Engine do
     Supervisor.start_link(children, opts)
   end
 
-  alias OpenFn.{Message, Job, RunSpec, Config, Matcher}
+  alias OpenFn.{Message, Job, RunSpec, Config}
+
   def execute_sync(%Message{} = message, %Job{} = job) do
     {:ok, state_path} = Temp.path(%{prefix: "state", suffix: ".json"})
     {:ok, final_state_path} = Temp.path(%{prefix: "final_state", suffix: ".json"})
@@ -34,14 +35,17 @@ defmodule OpenFn.Engine do
   end
 
   def handle_message(%Config{} = config, %Message{} = message) do
-    triggers = Matcher.get_matches(Config.triggers(config, :criteria), message)
+    # TODO: take in 'EngineConfig' instead of Config
+    OpenFn.RunBroadcaster.handle_message(:run_broadcaster, message)
+  end
 
-    Config.jobs_for(config, triggers)
-    |> Enum.map(&execute_sync(message, &1))
+  def handle_trigger(%Config{} = config, trigger) do
+    Config.jobs_for(config, [trigger])
+    |> Enum.map(&execute_sync(%Message{body: %{}}, &1))
   end
 
   def config(engine, key) when is_atom(key) do
-    Module.concat(engine, "Registry")
+    :"#{engine}_registry"
     |> Registry.meta(key)
     |> case do
       {:ok, config} -> config

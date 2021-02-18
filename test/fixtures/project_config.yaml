@@ -12,9 +12,13 @@ jobs:
     language_pack: '@openfn/language-common'
     trigger: trigger-3
   job-3:
-    expression: none
+    expression: >
+      alterState((state) => {
+        console.log("Hi there!")
+        return state;
+      })
     language_pack: '@openfn/language-common'
-    trigger: trigger-3
+    trigger: trigger-4
 
 triggers:
   trigger-2:

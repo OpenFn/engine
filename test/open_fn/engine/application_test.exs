@@ -10,7 +10,7 @@ defmodule AppConfigured do
 end
 
 defmodule OpenFn.Engine.Application.UnitTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   import Engine.TestUtil
 
@@ -22,7 +22,7 @@ defmodule OpenFn.Engine.Application.UnitTest do
       [project_config: fixture(:project_config, :yaml), name: TestApp]
     })
 
-    {:ok, %OpenFn.Config{}} = Registry.meta(TestApp.Registry, :project_config)
+    {:ok, %OpenFn.Config{}} = Registry.meta(String.to_atom("#{TestApp}_registry"), :project_config)
   end
 
   test "can call handle_message without Config" do
