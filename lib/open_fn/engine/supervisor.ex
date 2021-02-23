@@ -58,7 +58,8 @@ defmodule OpenFn.Engine.Supervisor do
     run_broadcaster_opts = %OpenFn.RunBroadcaster.StartOpts{
       name: config[:run_broadcaster_name],
       config: project_config,
-      run_dispatcher: :run_dispatcher
+      run_dispatcher: :run_dispatcher,
+      run_repo: config[:run_repo_name]
     }
 
     run_dispatcher_opts = %OpenFn.RunDispatcher.StartOpts{

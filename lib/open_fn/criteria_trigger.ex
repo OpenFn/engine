@@ -1,6 +1,10 @@
 defmodule OpenFn.CriteriaTrigger do
   defstruct name: nil, criteria: ""
 
+  def new(fields \\ []) do
+    struct!(__MODULE__, fields)
+  end
+
   # TODO: convert our criteria style triggers into list of expectations that
   #       work with is_match?/2
   # {

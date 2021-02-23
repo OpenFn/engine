@@ -1,7 +1,3 @@
-defmodule OpenFn.Result do
-  defstruct [:exit_code, :log, :final_state_path]
-end
-
 defmodule OpenFn.ShellRuntime do
   alias OpenFn.{RunSpec, Result}
   require Logger

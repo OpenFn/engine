@@ -64,7 +64,7 @@ defmodule OpenFn.RunDispatcher do
 
       # Intentionally wait or else or we'll dispatch too many Runs
       receive do
-        {:DOWN, ref, :process, _pid, :normal} ->
+        {:DOWN, _ref, :process, _pid, :normal} ->
           nil
       end
     end) |> IO.inspect

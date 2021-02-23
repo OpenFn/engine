@@ -59,7 +59,7 @@ defmodule OpenFn.RunRepo do
       state.runs
       |> Enum.filter(fn run -> run.job.name == job_name && run.finished end)
       |> Enum.sort_by(&Map.get(&1, :finished), :desc)
-      |> hd
+      |> Enum.at(0)
 
     {:reply, last_run, state}
   end
