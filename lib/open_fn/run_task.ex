@@ -123,8 +123,9 @@ defmodule OpenFn.RunTask do
     {:noreply, %{state | ref: nil}}
   end
 
-  def handle_info({:DOWN, _ref, :process, _pid, _reason}, state) do
+  def handle_info({:DOWN, _ref, :process, _pid, reason}, state) do
     # The Task finished with an error... if it succeeds we demonitor it
+    Logger.debug inspect(reason)
     OpenFn.RunRepo.add_run(state.run_repo, state.run)
     done(self())
     {:noreply, state}

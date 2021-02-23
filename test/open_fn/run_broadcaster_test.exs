@@ -108,7 +108,8 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
          %OpenFn.Run{
            trigger: ^cron_trigger,
            initial_state: {:file, "file path"}
-         }} -> true
+         }} ->
+          true
 
         any ->
           IO.puts("Got: #{inspect(any)}")

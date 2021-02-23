@@ -68,7 +68,8 @@ defmodule OpenFn.Engine.Supervisor do
       queue: :run_task_queue,
       # TODO: CHANGEME
       task_supervisor: :task_supervisor,
-      run_repo: config[:run_repo_name]
+      run_repo: config[:run_repo_name],
+      temp_opts: %{basedir: "./tmp"}
     }
 
     # start scheduler around here

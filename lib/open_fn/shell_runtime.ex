@@ -35,7 +35,7 @@ defmodule OpenFn.ShellRuntime do
         {msg,
          %Result{
            exit_code: res.status,
-           log: rambo_opts[:log] || (res.err <> res.out),
+           log: !!rambo_opts[:log] || (res.err <> res.out),
            final_state_path: runspec.final_state_path
          }}
 

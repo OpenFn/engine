@@ -24,3 +24,5 @@ openfn_engine-*.tar
 
 # OpenFn Runtime
 /priv/openfn/runtime
+
+/tmp/

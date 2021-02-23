@@ -12,11 +12,12 @@ defmodule OpenFn.RunDispatcher do
             name: GenServer.name(),
             queue: GenServer.name(),
             task_supervisor: GenServer.name(),
-            run_repo: GenServer.name()
+            run_repo: GenServer.name(),
+            temp_opts: Map.t()
           }
 
     @enforce_keys [:name, :queue, :task_supervisor, :run_repo]
-    defstruct @enforce_keys
+    defstruct @enforce_keys ++ [temp_opts: %{}]
   end
 
   use GenServer
@@ -29,27 +30,19 @@ defmodule OpenFn.RunDispatcher do
   end
 
   @spec init(any) :: {:ok, any}
-  def init(init_arg) do
+  def init(opts) do
+    if basedir = Map.get(opts.temp_opts, :basedir) do
+      File.mkdir_p!(basedir)
+    end
+
     IO.puts("RunDispatcher started")
-    {:ok, init_arg}
+    {:ok, opts}
   end
 
   def handle_call({:invoke_run, run}, _from, state) do
     Logger.debug("RunDispatcher.invoke_run")
-    {:ok, state_path} = Temp.path(%{prefix: "state", suffix: ".json"})
-    {:ok, final_state_path} = Temp.path(%{prefix: "final_state", suffix: ".json"})
-    {:ok, expression_path} = Temp.path(%{prefix: "expression", suffix: ".js"})
 
-    File.write!(state_path, Jason.encode!(run.initial_state))
-    File.write!(expression_path, run.job.expression || "")
-
-    run =
-      Run.add_run_spec(run, %RunSpec{
-        state_path: state_path,
-        final_state_path: final_state_path,
-        expression_path: expression_path,
-        language_pack: run.job.language_pack
-      })
+    run = Run.add_run_spec(run, prepare_runspec(run, state.temp_opts))
 
     OPQ.enqueue(state.queue, fn ->
       {:ok, pid} =
@@ -57,7 +50,6 @@ defmodule OpenFn.RunDispatcher do
           run: run,
           task_supervisor: :task_supervisor,
           run_repo: state.run_repo
-
         )
 
       Process.monitor(pid)
@@ -67,9 +59,48 @@ defmodule OpenFn.RunDispatcher do
         {:DOWN, _ref, :process, _pid, :normal} ->
           nil
       end
-    end) |> IO.inspect
+    end)
 
     {:reply, :ok, state}
+  end
+
+  defp generate_path(name, temp_opts) do
+    [prefix, suffix] = String.split(name, ".")
+
+    {:ok, path} =
+      Temp.path(
+        %{prefix: prefix, suffix: "." <> suffix}
+        |> Map.merge(temp_opts)
+      )
+
+    Path.absname(path)
+  end
+
+  defp prepare_runspec(%Run{} = run, temp_opts) do
+    # TODO: set base_dir option to save the files to somewhere in the project
+    final_state_path = generate_path("final_state.json", temp_opts)
+    expression_path = generate_path("expression.js", temp_opts)
+
+    # TODO: this || makes me sad, refactor
+    state_path =
+      case run.initial_state || %{} do
+        {:file, path} ->
+          path
+
+        state when is_map(state) ->
+          state_path = generate_path("state.json", temp_opts)
+          File.write!(state_path, Jason.encode!(run.initial_state))
+          state_path
+      end
+
+    File.write!(expression_path, run.job.expression || "")
+
+    %RunSpec{
+      state_path: state_path,
+      final_state_path: final_state_path,
+      expression_path: expression_path,
+      language_pack: run.job.language_pack
+    }
   end
 
   def invoke_run(server, run) do
