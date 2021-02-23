@@ -1,8 +1,8 @@
 defmodule OpenFn.RunBroadcaster.UnitTest do
   use ExUnit.Case, async: true
-  alias OpenFn.{RunBroadcaster, Config, CriteriaTrigger, Job}
+  alias OpenFn.{RunBroadcaster, Run, Config, CriteriaTrigger, Job}
 
-  test "matches up a CriteriaTrigger to a message" do
+  setup do
     config =
       Config.new(
         triggers: [%CriteriaTrigger{name: "test", criteria: %{"a" => 1}}],
@@ -22,6 +22,10 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
       {TestServer, [name: :test_run_dispatcher, owner: self()]}
     )
 
+    [broadcaster: :test_run_broadcaster]
+  end
+
+  test "matches up a CriteriaTrigger to a message" do
     RunBroadcaster.handle_message(
       :test_run_broadcaster,
       %{body: %{"a" => 1}}
@@ -35,4 +39,20 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
 
     assert got_a_run
   end
+
+  test "matches up a CronTrigger to a message" do
+    RunBroadcaster.handle_message(
+      :test_run_broadcaster,
+      %{body: %{"a" => 1}}
+    )
+
+    got_a_run = receive do
+      {:invoke_run, %OpenFn.Run{}} ->
+        true
+      _ -> false
+    end
+
+    assert got_a_run
+  end
+
 end

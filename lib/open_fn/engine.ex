@@ -34,9 +34,9 @@ defmodule OpenFn.Engine do
     })
   end
 
-  def handle_message(%Config{} = config, %Message{} = message) do
-    # TODO: take in 'EngineConfig' instead of Config
-    OpenFn.RunBroadcaster.handle_message(:run_broadcaster, message)
+
+  def handle_message(run_broadcaster, %Message{} = message) do
+    OpenFn.RunBroadcaster.handle_message(run_broadcaster, message)
   end
 
   def handle_trigger(%Config{} = config, trigger) do

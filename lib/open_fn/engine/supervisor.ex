@@ -11,6 +11,12 @@ end
 defmodule OpenFn.Engine.Supervisor do
   use Supervisor
 
+  @defaults [
+    name: __MODULE__,
+    run_broadcaster_name: :engine_run_broadcaster,
+    run_repo_name: :engine_run_repo,
+  ]
+
   def start_link(config) do
     name =
       config[:name] ||
@@ -29,7 +35,12 @@ defmodule OpenFn.Engine.Supervisor do
     name = config[:name]
     project_config = OpenFn.Config.parse!(config[:project_config])
 
+    run_repo_opts = %OpenFn.RunRepo.StartOpts{
+      name: config[:run_repo_name]
+    }
+
     run_registry = String.to_atom("#{name}_registry")
+
     registry = [
       meta: [project_config: project_config],
       keys: :unique,
@@ -45,23 +56,29 @@ defmodule OpenFn.Engine.Supervisor do
       |> Keyword.new()
 
     run_broadcaster_opts = %OpenFn.RunBroadcaster.StartOpts{
-      name: :run_broadcaster,
+      name: config[:run_broadcaster_name],
       config: project_config,
       run_dispatcher: :run_dispatcher
     }
 
     run_dispatcher_opts = %OpenFn.RunDispatcher.StartOpts{
       name: :run_dispatcher,
-      run_registry: run_registry
+      # TODO: CHANGEME
+      queue: :run_task_queue,
+      # TODO: CHANGEME
+      task_supervisor: :task_supervisor,
+      run_repo: config[:run_repo_name]
     }
 
     # start scheduler around here
     children = [
+      {OpenFn.RunRepo, run_repo_opts},
+      %{id: OPQ, start: {OPQ, :init, [[name: :run_task_queue]]}},
       {Registry, registry},
       {OpenFn.RunBroadcaster, run_broadcaster_opts},
       {OpenFn.RunDispatcher, run_dispatcher_opts},
       {OpenFn.Engine.Scheduler, [id: name, name: OpenFn.Engine.Scheduler, jobs: scheduler_jobs]},
-      {Task.Supervisor, [name: :executor_supervisor]}
+      {Task.Supervisor, [name: :task_supervisor]}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
@@ -74,8 +91,6 @@ defmodule OpenFn.Engine.Supervisor do
         :error -> []
       end
 
-    defaults = [name: opts[:name] || module]
-
-    defaults |> Keyword.merge(conf) |> Keyword.merge(opts)
+    @defaults |> Keyword.merge(conf) |> Keyword.merge(opts) |> IO.inspect
   end
 end

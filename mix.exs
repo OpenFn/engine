@@ -38,6 +38,7 @@ defmodule OpenFn.Engine.MixProject do
       {:ex_doc, "~> 0.22", only: :dev, runtime: false},
       {:exjsonpath, "~> 0.1"},
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
+      {:opq, github: "fredwu/opq", ref: "08406f5"},
       {:rambo, "~> 0.3.2"},
       {:temp, "~> 0.4"},
       {:jason, "~> 1.2"},

@@ -6,22 +6,23 @@ defmodule OpenFn.RunDispatcher do
 
   - **name**
     The name of the process
-  - **run_registry**
-    The name of the run registry used to register the resulting RunAgent
   """
   defmodule StartOpts do
     @type t :: %__MODULE__{
             name: GenServer.name(),
-            run_registry: GenServer.name()
+            queue: GenServer.name(),
+            task_supervisor: GenServer.name(),
+            run_repo: GenServer.name()
           }
 
-    @enforce_keys [:name, :run_registry]
+    @enforce_keys [:name, :queue, :task_supervisor, :run_repo]
     defstruct @enforce_keys
   end
 
   use GenServer
+  require Logger
 
-  alias OpenFn.{RunAgent, Executor, RunSpec, Run}
+  alias OpenFn.{RunTask, RunSpec, Run}
 
   def start_link(%StartOpts{} = opts) do
     GenServer.start_link(__MODULE__, opts, name: opts.name)
@@ -34,6 +35,7 @@ defmodule OpenFn.RunDispatcher do
   end
 
   def handle_call({:invoke_run, run}, _from, state) do
+    Logger.debug("RunDispatcher.invoke_run")
     {:ok, state_path} = Temp.path(%{prefix: "state", suffix: ".json"})
     {:ok, final_state_path} = Temp.path(%{prefix: "final_state", suffix: ".json"})
     {:ok, expression_path} = Temp.path(%{prefix: "expression", suffix: ".js"})
@@ -49,22 +51,28 @@ defmodule OpenFn.RunDispatcher do
         language_pack: run.job.language_pack
       })
 
-    run_agent = run_agent_name(state, run)
-    RunAgent.start_link(%RunAgent.StartOpts{name: run_agent, run: run})
+    OPQ.enqueue(state.queue, fn ->
+      {:ok, pid} =
+        RunTask.start_link(
+          run: run,
+          task_supervisor: :task_supervisor,
+          run_repo: state.run_repo
 
-    Executor.execute(%Executor.StartOpts{
-      executor_supervisor: :executor_supervisor,
-      run_agent_name: run_agent
-    })
+        )
 
-    {:reply, RunAgent.value(run_agent), state}
+      Process.monitor(pid)
+
+      # Intentionally wait or else or we'll dispatch too many Runs
+      receive do
+        {:DOWN, ref, :process, _pid, :normal} ->
+          nil
+      end
+    end) |> IO.inspect
+
+    {:reply, :ok, state}
   end
 
   def invoke_run(server, run) do
     server |> GenServer.call({:invoke_run, run})
-  end
-
-  defp run_agent_name(%{run_registry: run_registry}, run) do
-    {:via, Registry, {run_registry, run.job.name}}
   end
 end

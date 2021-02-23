@@ -21,11 +21,11 @@ defmodule OpenFn.Engine.Application do
       alias OpenFn.Message
 
       def handle_message(%Message{} = message) do
-        OpenFn.Engine.handle_message(project_config!(), message)
+        OpenFn.Engine.handle_message(@config[:run_broadcaster_name], message)
       end
 
-      defp config(key) when is_atom(key) do
-        OpenFn.Engine.config(@config[:name], key)
+      def config(key) when is_atom(key) do
+        @config[key]
       end
 
       defp project_config! do

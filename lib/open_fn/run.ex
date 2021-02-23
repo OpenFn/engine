@@ -10,7 +10,7 @@ defmodule OpenFn.Run do
 
   alias OpenFn.{RunSpec, Result}
 
-  def new(fields) do
+  def new(fields \\ []) do
     struct!(__MODULE__, fields)
   end
 

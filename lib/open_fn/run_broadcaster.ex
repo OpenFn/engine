@@ -22,6 +22,21 @@ defmodule OpenFn.RunBroadcaster do
     defstruct @enforce_keys ++ [config: %Config{}]
   end
 
+  defmodule State do
+    @moduledoc false
+
+    # Start Options for Quantum.Executor
+
+    @type t :: %__MODULE__{
+            config: Config.t(),
+            run_dispatcher: GenServer.name(),
+            runs: [],
+          }
+
+    @enforce_keys [:run_dispatcher]
+    defstruct @enforce_keys ++ [config: %Config{}, runs: []]
+  end
+
   def start_link(%StartOpts{} = opts) do
     state =
       opts
@@ -30,9 +45,8 @@ defmodule OpenFn.RunBroadcaster do
     GenServer.start_link(__MODULE__, state, name: opts.name)
   end
 
-  def init(config) do
-    IO.puts("RunBroadcaster started")
-    {:ok, config}
+  def init(opts) do
+    {:ok, struct!(State, opts)}
   end
 
   def handle_call({:handle_message, message}, _from, state) do
@@ -47,6 +61,14 @@ defmodule OpenFn.RunBroadcaster do
     |> Enum.map(&RunDispatcher.invoke_run(run_dispatcher, &1))
 
     {:reply, runs, state}
+  end
+
+  def handle_call({:add_run, run}, _from, state) do
+    {:reply, :ok, %{state | runs: [run | state.runs]}}
+  end
+
+  def handle_call({:list_runs}, _from, state) do
+    {:reply, state.runs, state}
   end
 
   def handle_message(server, message) do

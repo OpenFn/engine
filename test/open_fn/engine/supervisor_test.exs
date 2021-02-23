@@ -7,7 +7,11 @@ defmodule OpenFn.Engine.Supervisor.UnitTest do
   test "can start directly" do
     start_supervised!(
       {OpenFn.Engine.Supervisor,
-       [name: "Foo", project_config: fixture(:project_config, :yaml), otp_app: :engine]}
+       [
+         name: "Foo",
+         project_config: fixture(:project_config, :yaml),
+         otp_app: :engine
+       ]}
     )
 
     assert Enum.count(OpenFn.Engine.Scheduler.jobs()) == 1

@@ -17,19 +17,14 @@ defmodule OpenFn.RunAgent do
     defstruct @enforce_keys ++ [run: %Run{}]
   end
 
-  @spec start_link(OpenFn.RunAgent.StartOpts.t()) :: {:error, any} | {:ok, pid}
-  def start_link(%{name: name, run: run}) do
-    Agent.start_link(fn -> run end, name: name)
+  # @spec start_link(OpenFn.RunAgent.StartOpts.t()) :: {:error, any} | {:ok, pid}
+  def start_link(run) do
+    Agent.start_link(fn -> run end)
   end
 
   def value(agent) do
     Agent.get(agent, & &1)
   end
-
-  def increment do
-    Agent.update(__MODULE__, &(&1 + 1))
-  end
-
   def add_log_line(agent, {type, str}) do
     agent |> Agent.cast(&Run.add_log_line(&1, {type, str}))
   end
