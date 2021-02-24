@@ -14,7 +14,8 @@ defmodule OpenFn.Engine.Supervisor do
   @defaults [
     name: __MODULE__,
     run_broadcaster_name: :engine_run_broadcaster,
-    run_repo_name: :engine_run_repo,
+    job_state_repo_name: :engine_job_state_repo,
+    job_state_basedir: "./tmp",
   ]
 
   def start_link(config) do
@@ -35,8 +36,9 @@ defmodule OpenFn.Engine.Supervisor do
     name = config[:name]
     project_config = OpenFn.Config.parse!(config[:project_config])
 
-    run_repo_opts = %OpenFn.RunRepo.StartOpts{
-      name: config[:run_repo_name]
+    job_state_repo_opts = %OpenFn.JobStateRepo.StartOpts{
+      name: config[:job_state_repo_name],
+      basedir: config[:job_state_basedir]
     }
 
     run_registry = String.to_atom("#{name}_registry")
@@ -59,7 +61,7 @@ defmodule OpenFn.Engine.Supervisor do
       name: config[:run_broadcaster_name],
       config: project_config,
       run_dispatcher: :run_dispatcher,
-      run_repo: config[:run_repo_name]
+      job_state_repo: config[:job_state_repo_name]
     }
 
     run_dispatcher_opts = %OpenFn.RunDispatcher.StartOpts{
@@ -68,13 +70,13 @@ defmodule OpenFn.Engine.Supervisor do
       queue: :run_task_queue,
       # TODO: CHANGEME
       task_supervisor: :task_supervisor,
-      run_repo: config[:run_repo_name],
+      job_state_repo: config[:job_state_repo_name],
       temp_opts: %{basedir: "./tmp"}
     }
 
     # start scheduler around here
     children = [
-      {OpenFn.RunRepo, run_repo_opts},
+      {OpenFn.JobStateRepo, job_state_repo_opts},
       %{id: OPQ, start: {OPQ, :init, [[name: :run_task_queue]]}},
       {Registry, registry},
       {OpenFn.RunBroadcaster, run_broadcaster_opts},

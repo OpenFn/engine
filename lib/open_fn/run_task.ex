@@ -2,34 +2,43 @@ defmodule OpenFn.RunTask do
   use GenServer
   require Logger
 
-  alias OpenFn.Run
+  alias OpenFn.{Run, JobStateRepo}
 
-  def start_link(opts) do
-    Logger.debug "RunTask.start_link/1"
-    GenServer.start_link(__MODULE__, opts)
+  defmodule State do
+    @moduledoc false
+
+    @type t :: %__MODULE__{
+            run: Run.t(),
+            task_supervisor: GenServer.name(),
+            job_state_repo: GenServer.name(),
+            ref: reference()
+          }
+
+    @enforce_keys [:run, :task_supervisor, :job_state_repo]
+    defstruct @enforce_keys ++ [ref: nil]
   end
 
-  def init(opts) do
-    Logger.debug "RunTask.init/1"
-    state = %{
-      run: opts[:run],
-      task_supervisor: opts[:task_supervisor],
-      run_repo: opts[:run_repo],
-      ref: nil
-    }
+  def start_link(opts) do
+    Logger.debug("RunTask.start_link/1")
+
+    GenServer.start_link(__MODULE__, struct!(State, opts))
+  end
+
+  def init(%State{} = state) do
+    Logger.debug("RunTask.init/1")
 
     {:ok, state, {:continue, :execute}}
   end
 
   def handle_continue(:execute, %{task_supervisor: task_supervisor} = state) do
-    Logger.debug "RunTask.handle_continue/2"
+    Logger.debug("RunTask.handle_continue/2")
     %Task{ref: ref} = execute(self(), task_supervisor)
 
     {:noreply, %{state | ref: ref}}
   end
 
   def execute(server, task_supervisor) do
-    Logger.debug "RunTask.execute/2"
+    Logger.debug("RunTask.execute/2")
     # Using async_nolink, we get messages from the Task.Supervisor which we
     # handle via handle_info/2 below
     Task.Supervisor.async_nolink(task_supervisor, fn ->
@@ -111,13 +120,20 @@ defmodule OpenFn.RunTask do
   end
 
   def terminate(reason, state) do
-    Logger.debug("RunTask.terminate/2: #{inspect([reason,state])}")
+    Logger.debug("RunTask.terminate/2: #{inspect([reason, state])}")
   end
 
-  def handle_info({ref, _answer}, %{ref: ref, run: run, run_repo: run_repo} = state) do
+  def handle_info(
+        {ref, _answer},
+        %{
+          ref: ref,
+          run: %Run{job: job, run_spec: %{final_state_path: final_state_path}},
+          job_state_repo: job_state_repo
+        } = state
+      ) do
     # We don't care about the DOWN message now, so let's demonitor and flush it
     Process.demonitor(ref, [:flush])
-    OpenFn.RunRepo.add_run(run_repo, run)
+    JobStateRepo.register(job_state_repo, job, final_state_path)
     done(self())
 
     {:noreply, %{state | ref: nil}}
@@ -125,8 +141,7 @@ defmodule OpenFn.RunTask do
 
   def handle_info({:DOWN, _ref, :process, _pid, reason}, state) do
     # The Task finished with an error... if it succeeds we demonitor it
-    Logger.debug inspect(reason)
-    OpenFn.RunRepo.add_run(state.run_repo, state.run)
+    Logger.warn("RunTask task_supervisor failed: #{inspect(reason)}")
     done(self())
     {:noreply, state}
   end

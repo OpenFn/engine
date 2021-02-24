@@ -3,6 +3,7 @@ defmodule TestApp do
 
   use OpenFn.Engine.Application,
     project_config: fixture(:project_config, :yaml),
+    job_state_basedir: Temp.path!(),
     otp_app: :engine
 end
 
@@ -34,9 +35,11 @@ defmodule OpenFn.Engine.Application.UnitTest do
 
     Process.sleep(1000)
 
-    runs = OpenFn.RunRepo.list_runs(TestApp.config(:run_repo_name))
-
-    assert has_ok_results(runs)
+    OpenFn.JobStateRepo.get_last_persisted_state_path(
+      TestApp.config(:job_state_repo_name),
+      %OpenFn.Job{name: "job-2"}
+    )
+    |> File.stat!()
   end
 
   test "can get a list of runs without config" do
@@ -46,8 +49,10 @@ defmodule OpenFn.Engine.Application.UnitTest do
 
     Process.sleep(1000)
 
-    runs = OpenFn.RunRepo.list_runs(AppConfigured.config(:run_repo_name))
-
-    assert has_ok_results(runs)
+    OpenFn.JobStateRepo.get_last_persisted_state_path(
+      TestApp.config(:job_state_repo_name),
+      %OpenFn.Job{name: "job-2"}
+    )
+    |> File.stat!()
   end
 end

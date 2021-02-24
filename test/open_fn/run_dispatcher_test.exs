@@ -4,17 +4,20 @@ defmodule OpenFn.RunDispatcher.UnitTest do
   alias OpenFn.{RunDispatcher, Run, Job, RunTask}
 
   setup do
+    Temp.track!
+
     queue = :opq_test
     run_dispatcher = :test_run_dispatcher
-    run_repo_name = :test_run_repo
+    job_state_repo_name = :test_run_repo
 
     start_supervised!(%{id: OPQ, start: {OPQ, :init, [[name: queue]]}})
     start_supervised!({Task.Supervisor, [name: :task_supervisor]})
 
     start_supervised!(
-      {OpenFn.RunRepo,
-       %OpenFn.RunRepo.StartOpts{
-         name: run_repo_name
+      {OpenFn.JobStateRepo,
+       %OpenFn.JobStateRepo.StartOpts{
+         name: job_state_repo_name,
+         basedir: Temp.path!()
        }}
     )
 
@@ -24,7 +27,7 @@ defmodule OpenFn.RunDispatcher.UnitTest do
          name: run_dispatcher,
          queue: queue,
          task_supervisor: :task_supervisor,
-         run_repo: run_repo_name
+         job_state_repo: job_state_repo_name
        }}
     )
 

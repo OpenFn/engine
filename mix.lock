@@ -12,7 +12,7 @@
   "nimble_parsec": {:hex, :nimble_parsec, "1.1.0", "3a6fca1550363552e54c216debb6a9e95bd8d32348938e13de5eda962c0d7f89", [:mix], [], "hexpm", "08eb32d66b706e913ff748f11694b17981c0b04a33ef470e33e11b3d3ac8f54b"},
   "opq": {:git, "https://github.com/fredwu/opq.git", "08406f50e1a9da7be7d34a6203273d3311c8a3ec", [ref: "08406f5"]},
   "quantum": {:hex, :quantum, "3.3.0", "e8f6b9479728774288c5f426b11a6e3e8f619f3c226163a7e18bccfe543b714d", [:mix], [{:crontab, "~> 1.1", [hex: :crontab, repo: "hexpm", optional: false]}, {:gen_stage, "~> 0.14 or ~> 1.0", [hex: :gen_stage, repo: "hexpm", optional: false]}, {:telemetry, "~> 0.4", [hex: :telemetry, repo: "hexpm", optional: false]}], "hexpm", "3b83ef137ab3887e783b013418b5ce3e847d66b71c4ef0f233b0321c84b72f67"},
-  "rambo": {:hex, :rambo, "0.3.2", "97cd76474c309c7cd0e78e889fadf4724b09fa2148a85801bcc82c5e87b54fa0", [:mix], [], "hexpm", "3226df4e19a69b88ff8ba091dcd818a2a52db6fb3fa83c4b446f8e57d36b7093"},
+  "rambo": {:hex, :rambo, "0.3.3", "dbf63658c060f2d1d05713513a56f2efc211c73d3457ff098f9c1bfc802d2066", [:mix], [], "hexpm", "a4649684d055f39a94427b056dd97a7c34a64cd9cdb6cdfd79b265de1e09f6df"},
   "telemetry": {:hex, :telemetry, "0.4.2", "2808c992455e08d6177322f14d3bdb6b625fbcfd233a73505870d8738a2f4599", [:rebar3], [], "hexpm", "2d1419bd9dda6a206d7b5852179511722e2b18812310d304620c7bd92a13fcef"},
   "temp": {:hex, :temp, "0.4.7", "2c78482cc2294020a4bc0c95950b907ff386523367d4e63308a252feffbea9f2", [:mix], [], "hexpm", "6af19e7d6a85a427478be1021574d1ae2a1e1b90882586f06bde76c63cd03e0d"},
   "yamerl": {:hex, :yamerl, "0.8.1", "07da13ffa1d8e13948943789665c62ccd679dfa7b324a4a2ed3149df17f453a4", [:rebar3], [], "hexpm", "96cb30f9d64344fed0ef8a92e9f16f207de6c04dfff4f366752ca79f5bceb23f"},

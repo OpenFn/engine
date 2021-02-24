@@ -1,8 +1,10 @@
 defmodule OpenFn.RunBroadcaster.UnitTest do
   use ExUnit.Case, async: true
-  alias OpenFn.{RunRepo, RunBroadcaster, Config, CriteriaTrigger, CronTrigger, Job}
+  alias OpenFn.{JobStateRepo, RunBroadcaster, Config, CriteriaTrigger, CronTrigger, Job}
 
   setup do
+    Temp.track!
+
     config =
       Config.new(
         triggers: [
@@ -15,7 +17,7 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
         ]
       )
 
-    run_repo_name = :run_broadcaster_run_repo_test
+    job_state_repo_name = :run_broadcaster_job_state_repo_test
 
     start_supervised!(
       {RunBroadcaster,
@@ -23,14 +25,15 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
          name: :test_run_broadcaster,
          run_dispatcher: :test_run_dispatcher,
          config: config,
-         run_repo: run_repo_name
+         job_state_repo: job_state_repo_name
        }}
     )
 
     start_supervised!(
-      {RunRepo,
-       %RunRepo.StartOpts{
-         name: run_repo_name
+      {JobStateRepo,
+       %JobStateRepo.StartOpts{
+         name: job_state_repo_name,
+         basedir: Temp.path!()
        }}
     )
 
@@ -39,7 +42,7 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
     %{
       broadcaster: :test_run_broadcaster,
       cron_trigger: cron_trigger,
-      run_repo: run_repo_name,
+      job_state_repo: job_state_repo_name,
       cron_job: cron_job
     }
   end
@@ -66,7 +69,7 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
 
   test "matches up a CronTrigger to a message", %{
     cron_trigger: cron_trigger,
-    run_repo: run_repo,
+    job_state_repo: job_state_repo,
     cron_job: cron_job
   } do
     RunBroadcaster.handle_trigger(
@@ -88,13 +91,13 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
 
     assert got_a_run
 
-    RunRepo.add_run(
-      run_repo,
-      OpenFn.Run.new(
-        job: cron_job,
-        result: OpenFn.Result.new(final_state_path: "file path"),
-        finished: -1
-      )
+    state_path = Temp.path!(suffix: "run-broadcaster-test.json")
+    File.touch!(state_path)
+
+    JobStateRepo.register(
+      job_state_repo,
+      cron_job,
+      state_path
     )
 
     RunBroadcaster.handle_trigger(
@@ -107,8 +110,9 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
         {:invoke_run,
          %OpenFn.Run{
            trigger: ^cron_trigger,
-           initial_state: {:file, "file path"}
+           initial_state: {:file, path}
          }} ->
+          assert String.contains?(path, "/cron-job/last-persisted-state.json")
           true
 
         any ->

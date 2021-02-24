@@ -4,24 +4,27 @@ defmodule OpenFn.RunTask.UnitTest do
   alias OpenFn.{Run, RunTask}
 
   setup do
+    Temp.track!()
+
     run = Run.new()
-    run_repo_name = :test_run_repo
+    job_state_repo_name = :test_job_state_repo_name
 
     start_supervised!({Task.Supervisor, [name: :task_supervisor]})
 
     start_supervised!(
-      {OpenFn.RunRepo,
-       %OpenFn.RunRepo.StartOpts{
-         name: run_repo_name
+      {OpenFn.JobStateRepo,
+       %OpenFn.JobStateRepo.StartOpts{
+         name: job_state_repo_name,
+         basedir: Temp.path!()
        }}
     )
 
-    %{run: run, task_supervisor: :task_supervisor, run_repo: run_repo_name}
+    %{run: run, task_supervisor: :task_supervisor, job_state_repo_name: job_state_repo_name}
   end
 
-  test "can start a RunTask", %{run: run, task_supervisor: task_supervisor, run_repo: run_repo} do
+  test "can start a RunTask", %{run: run, task_supervisor: task_supervisor, job_state_repo_name: job_state_repo_name} do
     {:ok, pid} =
-      RunTask.start_link(run: run, task_supervisor: task_supervisor, run_repo: run_repo)
+      RunTask.start_link(run: run, task_supervisor: task_supervisor, job_state_repo: job_state_repo_name)
       |> IO.inspect()
 
     ref = Process.monitor(pid)

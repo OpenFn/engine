@@ -12,11 +12,11 @@ defmodule OpenFn.RunDispatcher do
             name: GenServer.name(),
             queue: GenServer.name(),
             task_supervisor: GenServer.name(),
-            run_repo: GenServer.name(),
+            job_state_repo: GenServer.name(),
             temp_opts: Map.t()
           }
 
-    @enforce_keys [:name, :queue, :task_supervisor, :run_repo]
+    @enforce_keys [:name, :queue, :task_supervisor, :job_state_repo]
     defstruct @enforce_keys ++ [temp_opts: %{}]
   end
 
@@ -49,7 +49,7 @@ defmodule OpenFn.RunDispatcher do
         RunTask.start_link(
           run: run,
           task_supervisor: :task_supervisor,
-          run_repo: state.run_repo
+          job_state_repo: state.job_state_repo
         )
 
       Process.monitor(pid)
