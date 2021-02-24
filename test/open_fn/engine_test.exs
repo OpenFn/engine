@@ -55,6 +55,7 @@ defmodule OpenFn.Engine.UnitTest do
     assert File.read!(run.result.final_state_path) == "{\n  \"a\": 1\n}"
   end
 
+  @tag skip: true
   test "handle_trigger/2" do
     body = Jason.decode!(~s({"a": 1}))
 

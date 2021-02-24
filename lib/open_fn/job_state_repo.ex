@@ -79,10 +79,11 @@ defmodule OpenFn.JobStateRepo do
     Path.join([basedir, name, filename])
   end
 
-
   def register(server, %Job{} = job, state_path),
     do: GenServer.call(server, {:register, job, state_path})
 
   def get_last_persisted_state_path(server, job = %Job{}),
-    do: GenServer.call(server, {:get_last_persisted_state_path, job})
+    do:
+      GenServer.call(server, {:get_last_persisted_state_path, job})
+      |> Path.absname()
 end

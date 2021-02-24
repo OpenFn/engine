@@ -16,7 +16,7 @@ defmodule OpenFn.Engine do
     Supervisor.start_link(children, opts)
   end
 
-  alias OpenFn.{Message, Job, RunSpec, Config}
+  alias OpenFn.{Message, Job, RunSpec}
 
   def execute_sync(%Message{} = message, %Job{} = job) do
     {:ok, state_path} = Temp.path(%{prefix: "state", suffix: ".json"})
@@ -39,9 +39,8 @@ defmodule OpenFn.Engine do
     OpenFn.RunBroadcaster.handle_message(run_broadcaster, message)
   end
 
-  def handle_trigger(%Config{} = config, trigger) do
-    Config.jobs_for(config, [trigger])
-    |> Enum.map(&execute_sync(%Message{body: %{}}, &1))
+  def handle_trigger(run_broadcaster, trigger) do
+    OpenFn.RunBroadcaster.handle_trigger(run_broadcaster, trigger)
   end
 
   def config(engine, key) when is_atom(key) do

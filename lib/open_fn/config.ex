@@ -84,8 +84,12 @@ defmodule OpenFn.Config do
   end
 
   def parse!(any) do
-    {:ok, config} = parse(any)
-    config
+    case parse(any) do
+      {:ok, config} -> config
+      {:error, _} ->
+        raise "Couldn't load configuration: #{inspect(any)}"
+
+    end
   end
 
   @doc """

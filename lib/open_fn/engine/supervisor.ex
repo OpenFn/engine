@@ -10,12 +10,13 @@ end
 
 defmodule OpenFn.Engine.Supervisor do
   use Supervisor
+  require Logger
 
   @defaults [
     name: __MODULE__,
     run_broadcaster_name: :engine_run_broadcaster,
     job_state_repo_name: :engine_job_state_repo,
-    job_state_basedir: "./tmp",
+    job_state_basedir: "./tmp"
   ]
 
   def start_link(config) do
@@ -36,6 +37,8 @@ defmodule OpenFn.Engine.Supervisor do
     name = config[:name]
     project_config = OpenFn.Config.parse!(config[:project_config])
 
+    Logger.debug(inspect(project_config))
+
     job_state_repo_opts = %OpenFn.JobStateRepo.StartOpts{
       name: config[:job_state_repo_name],
       basedir: config[:job_state_basedir]
@@ -53,9 +56,18 @@ defmodule OpenFn.Engine.Supervisor do
       OpenFn.Config.triggers(project_config, :cron)
       |> Enum.map(fn t ->
         {String.to_atom(t.name),
-         [schedule: t.cron, task: {OpenFn.Engine, :handle_trigger, [project_config, t]}]}
+         [
+           schedule: t.cron,
+           task: {
+             OpenFn.Engine,
+             :handle_trigger,
+             [config[:run_broadcaster_name], t]
+           }
+         ]}
       end)
       |> Keyword.new()
+
+    IO.inspect(scheduler_jobs)
 
     run_broadcaster_opts = %OpenFn.RunBroadcaster.StartOpts{
       name: config[:run_broadcaster_name],
@@ -95,6 +107,6 @@ defmodule OpenFn.Engine.Supervisor do
         :error -> []
       end
 
-    @defaults |> Keyword.merge(conf) |> Keyword.merge(opts) |> IO.inspect
+    @defaults |> Keyword.merge(conf) |> Keyword.merge(opts) |> IO.inspect()
   end
 end
