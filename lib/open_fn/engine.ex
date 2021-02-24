@@ -16,15 +16,13 @@ defmodule OpenFn.Engine do
     Supervisor.start_link(children, opts)
   end
 
-  alias OpenFn.{Message, Job, RunSpec, Config, Matcher}
+  alias OpenFn.{Message, Job, RunSpec}
+
   def execute_sync(%Message{} = message, %Job{} = job) do
     {:ok, state_path} = Temp.path(%{prefix: "state", suffix: ".json"})
     {:ok, final_state_path} = Temp.path(%{prefix: "final_state", suffix: ".json"})
     {:ok, expression_path} = Temp.path(%{prefix: "expression", suffix: ".js"})
 
-    # Assemble state
-    # TODO: find a home for setting up the state given the job type/trigger
-    # TODO: ensure sane default and helpful errors _before_ trying to execute
     File.write!(state_path, Jason.encode!(message.body))
     File.write!(expression_path, job.expression || "")
 
@@ -36,15 +34,17 @@ defmodule OpenFn.Engine do
     })
   end
 
-  def handle_message(%Config{} = config, %Message{} = message) do
-    triggers = Matcher.get_matches(config.triggers, message)
 
-    Config.jobs_for(config, triggers)
-    |> Enum.map(&execute_sync(message, &1))
+  def handle_message(run_broadcaster, %Message{} = message) do
+    OpenFn.RunBroadcaster.handle_message(run_broadcaster, message)
+  end
+
+  def handle_trigger(run_broadcaster, trigger) do
+    OpenFn.RunBroadcaster.handle_trigger(run_broadcaster, trigger)
   end
 
   def config(engine, key) when is_atom(key) do
-    Module.concat(engine, "Registry")
+    :"#{engine}_registry"
     |> Registry.meta(key)
     |> case do
       {:ok, config} -> config

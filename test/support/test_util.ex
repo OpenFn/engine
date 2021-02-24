@@ -6,13 +6,16 @@ defmodule Engine.TestUtil do
 
   import ExUnit.Assertions
 
-  def has_ok_results(results) do
-    assert length(results) > 0
+  def has_ok_results(runs) do
+    assert length(runs) > 0
 
-    assert Enum.all?(results, fn result ->
+    assert Enum.all?(runs, fn %OpenFn.Run{result: result} ->
              case result do
-               {:ok, %OpenFn.Result{}} -> true
-               _ -> false
+               %OpenFn.Result{} = result ->
+                 result.exit_code == 0
+
+               _ ->
+                 false
              end
            end)
   end

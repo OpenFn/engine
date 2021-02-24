@@ -1,5 +1,5 @@
-defmodule OpenFn.CriteriaTrigger do
-  defstruct name: nil, criteria: ""
+defmodule OpenFn.CronTrigger do
+  defstruct name: nil, cron: ""
 
   def new(fields \\ []) do
     struct!(__MODULE__, fields)
@@ -17,11 +17,11 @@ defmodule OpenFn.CriteriaTrigger do
   #     }
   #   }
   # }
-  def to_expectations(%__MODULE__{criteria: criteria}) do
-    criteria |> Enum.map(&to_expectation(&1, "$"))
-  end
+  # def to_expectations(%__MODULE__{criteria: criteria}) do
+  #   criteria |> Enum.map(&to_expectation(&1, "$"))
+  # end
 
-  defp to_expectation({key, value}, path) do
-    {path <> ".#{key}", value}
-  end
+  # defp to_expectation({key, value}, path) do
+  #   {path <> ".#{key}", value}
+  # end
 end

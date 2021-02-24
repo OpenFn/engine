@@ -68,16 +68,28 @@ defmodule OpenFn.Config do
   ```
   A criteria of `{"baz": {"quux": 5}}` would also match this test.
 
+  **cron**
+
+  A cron matcher, which gets triggered at the interval specified.
+
   """
 
   defstruct jobs: [], triggers: []
   @type t :: %__MODULE__{jobs: any(), triggers: any()}
 
-  alias OpenFn.{CriteriaTrigger, Job}
+  alias OpenFn.{CriteriaTrigger, CronTrigger, Job}
+
+  def new(fields) do
+    struct!(__MODULE__, fields)
+  end
 
   def parse!(any) do
-    {:ok, config} = parse(any)
-    config
+    case parse(any) do
+      {:ok, config} -> config
+      {:error, _} ->
+        raise "Couldn't load configuration: #{inspect(any)}"
+
+    end
   end
 
   @doc """
@@ -113,8 +125,14 @@ defmodule OpenFn.Config do
 
     triggers =
       for {name, trigger_opts} <- trigger_data, into: [] do
-        {:ok, criteria} = Jason.decode(Map.get(trigger_opts, "criteria"))
-        %CriteriaTrigger{name: name, criteria: criteria}
+        case Map.keys(trigger_opts) do
+          ["criteria"] ->
+            {:ok, criteria} = Jason.decode(Map.get(trigger_opts, "criteria"))
+            %CriteriaTrigger{name: name, criteria: criteria}
+
+          ["cron"] ->
+            %CronTrigger{name: name, cron: Map.get(trigger_opts, "cron")}
+        end
       end
 
     jobs =
@@ -139,5 +157,15 @@ defmodule OpenFn.Config do
         t.name == j.trigger
       end)
     end)
+  end
+
+  def triggers(%__MODULE__{} = config, type) do
+    Enum.filter(
+      config.triggers,
+      case type do
+        :cron -> fn t -> t.__struct__ == CronTrigger end
+        :criteria -> fn t -> t.__struct__ == CriteriaTrigger end
+      end
+    )
   end
 end
