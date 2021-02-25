@@ -4,6 +4,12 @@ defmodule Engine.TestUtil do
     File.read!(path)
   end
 
+  def run_spec_fixture() do
+    %OpenFn.RunSpec{
+      final_state_path: Temp.path!()
+    }
+  end
+
   import ExUnit.Assertions
 
   def has_ok_results(runs) do

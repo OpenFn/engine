@@ -11,23 +11,26 @@ defmodule OpenFn.RunTask do
             run: Run.t(),
             task_supervisor: GenServer.name(),
             job_state_repo: GenServer.name(),
+            parent: pid(),
             ref: reference()
           }
 
     @enforce_keys [:run, :task_supervisor, :job_state_repo]
-    defstruct @enforce_keys ++ [ref: nil]
+    defstruct @enforce_keys ++ [ref: nil, parent: nil]
   end
 
   def start_link(opts) do
     Logger.debug("RunTask.start_link/1")
 
-    GenServer.start_link(__MODULE__, struct!(State, opts))
+    GenServer.start_link(__MODULE__, struct!(State, opts ++ [parent: self()]))
   end
 
   def init(%State{} = state) do
-    Logger.debug("RunTask.init/1")
-
-    {:ok, state, {:continue, :execute}}
+    unless state.run.run_spec do
+      {:stop, "Cannot start RunTask without RunSpec attached to Run"}
+    else
+      {:ok, state, {:continue, :execute}}
+    end
   end
 
   def handle_continue(:execute, %{task_supervisor: task_supervisor} = state) do
@@ -123,6 +126,12 @@ defmodule OpenFn.RunTask do
     Logger.debug("RunTask.terminate/2: #{inspect([reason, state])}")
   end
 
+  def maybe_notify_parent(nil, _msg), do: :ok
+
+  def maybe_notify_parent(parent, msg) when is_pid(parent) do
+    send(parent, msg)
+  end
+
   def handle_info(
         {ref, _answer},
         %{
@@ -134,6 +143,7 @@ defmodule OpenFn.RunTask do
     # We don't care about the DOWN message now, so let's demonitor and flush it
     Process.demonitor(ref, [:flush])
     JobStateRepo.register(job_state_repo, job, final_state_path)
+    maybe_notify_parent(state.parent, {:run_complete, state.run})
     done(self())
 
     {:noreply, %{state | ref: nil}}

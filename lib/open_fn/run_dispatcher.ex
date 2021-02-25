@@ -13,17 +13,18 @@ defmodule OpenFn.RunDispatcher do
             queue: GenServer.name(),
             task_supervisor: GenServer.name(),
             job_state_repo: GenServer.name(),
+            run_broadcaster: GenServer.name(),
             temp_opts: Map.t()
           }
 
-    @enforce_keys [:name, :queue, :task_supervisor, :job_state_repo]
+    @enforce_keys [:name, :queue, :task_supervisor, :job_state_repo, :run_broadcaster]
     defstruct @enforce_keys ++ [temp_opts: %{}]
   end
 
   use GenServer
   require Logger
 
-  alias OpenFn.{RunTask, RunSpec, Run}
+  alias OpenFn.{RunTask, RunSpec, Run, RunBroadcaster}
 
   def start_link(%StartOpts{} = opts) do
     GenServer.start_link(__MODULE__, opts, name: opts.name)
@@ -48,15 +49,18 @@ defmodule OpenFn.RunDispatcher do
       {:ok, pid} =
         RunTask.start_link(
           run: run,
-          task_supervisor: :task_supervisor,
+          task_supervisor: state.task_supervisor,
           job_state_repo: state.job_state_repo
         )
 
       Process.monitor(pid)
 
+
       # Intentionally wait or else or we'll dispatch too many Runs
       receive do
-        {:DOWN, _ref, :process, _pid, :normal} ->
+        {:run_complete, run} ->
+          RunBroadcaster.process(state.run_broadcaster, run)
+        {:DOWN, _ref, :process, ^pid, :normal} ->
           nil
       end
     end)
