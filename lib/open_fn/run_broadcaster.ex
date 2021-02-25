@@ -5,7 +5,7 @@ defmodule OpenFn.RunBroadcaster do
   """
   use GenServer
 
-  alias OpenFn.{Config, Matcher, RunDispatcher, Run, JobStateRepo}
+  alias OpenFn.{Config, Matcher, RunDispatcher, Run, JobStateRepo, Result}
 
   defmodule StartOpts do
     @moduledoc false
@@ -88,11 +88,49 @@ defmodule OpenFn.RunBroadcaster do
     {:reply, runs, state}
   end
 
+  def handle_call({:process_run, run}, _from, state) do
+    %{config: config, run_dispatcher: run_dispatcher} = state
+
+    runs =
+      case run do
+        %Run{job: job, result: %Result{exit_code: 0}} ->
+          Config.job_triggers_for(config, job)
+          |> Enum.map(fn {job, trigger} ->
+            # Get the final_state from the Run that triggered this.
+            last_state_path =
+              JobStateRepo.get_last_persisted_state_path(state.job_state_repo, job)
+
+            initial_state =
+              case File.stat(last_state_path) do
+                {:ok, _} ->
+                  # assume a file path
+                  {:file, last_state_path}
+
+                {:error, _} ->
+                  # file not found, send an empty map to be serialised to json
+                  %{}
+              end
+
+            Run.new(job: job, trigger: trigger, initial_state: initial_state)
+          end)
+          |> Enum.map(&RunDispatcher.invoke_run(run_dispatcher, &1))
+
+        %Run{} ->
+          []
+      end
+
+    {:reply, runs, state}
+  end
+
   def handle_message(server, message) do
     GenServer.call(server, {:handle_message, message})
   end
 
   def handle_trigger(server, trigger) do
     GenServer.call(server, {:handle_trigger, trigger})
+  end
+
+  def process(server, %Run{} = run) do
+    GenServer.call(server, {:process_run, run})
   end
 end

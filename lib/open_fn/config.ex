@@ -77,7 +77,7 @@ defmodule OpenFn.Config do
   defstruct jobs: [], triggers: []
   @type t :: %__MODULE__{jobs: any(), triggers: any()}
 
-  alias OpenFn.{CriteriaTrigger, CronTrigger, Job}
+  alias OpenFn.{CriteriaTrigger, CronTrigger, FlowTrigger, Job}
 
   def new(fields) do
     struct!(__MODULE__, fields)
@@ -85,10 +85,11 @@ defmodule OpenFn.Config do
 
   def parse!(any) do
     case parse(any) do
-      {:ok, config} -> config
+      {:ok, config} ->
+        config
+
       {:error, _} ->
         raise "Couldn't load configuration: #{inspect(any)}"
-
     end
   end
 
@@ -132,6 +133,9 @@ defmodule OpenFn.Config do
 
           ["cron"] ->
             %CronTrigger{name: name, cron: Map.get(trigger_opts, "cron")}
+
+          ["success"] ->
+            %FlowTrigger{name: name, success: Map.get(trigger_opts, "success")}
         end
       end
 
@@ -163,9 +167,21 @@ defmodule OpenFn.Config do
     Enum.filter(
       config.triggers,
       case type do
+        :flow -> fn t -> t.__struct__ == FlowTrigger end
         :cron -> fn t -> t.__struct__ == CronTrigger end
         :criteria -> fn t -> t.__struct__ == CriteriaTrigger end
       end
     )
+  end
+
+  @doc """
+  Returns a list of tuples containing a tuples with the job & trigger combination
+  for all triggers the provided job with subsequently trigger.
+  """
+  def job_triggers_for(%__MODULE__{} = config, job) do
+    triggers(config, :flow)
+    |> Enum.filter(fn trigger -> trigger.success == job.name end)
+    |> Enum.map(fn trigger -> {jobs_for(config, [trigger]), trigger} end)
+    |> Enum.flat_map(fn {jobs, trigger} -> Enum.map(jobs, fn j -> {j, trigger} end) end)
   end
 end

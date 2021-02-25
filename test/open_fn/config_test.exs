@@ -1,7 +1,7 @@
 defmodule OpenFn.ConfigTest do
   use ExUnit.Case, async: true
 
-  alias OpenFn.{Config, CriteriaTrigger, CronTrigger, Job}
+  alias OpenFn.{Config, CriteriaTrigger, CronTrigger, FlowTrigger, Job}
 
   setup do
     %{
@@ -19,6 +19,10 @@ defmodule OpenFn.ConfigTest do
           expression: none
           language_pack: language-common
           trigger: trigger-3
+        job-4:
+          expression: none
+          language_pack: language-common
+          trigger: after-job-2
 
       triggers:
         trigger-2:
@@ -27,6 +31,8 @@ defmodule OpenFn.ConfigTest do
           criteria: '{"b":2}'
         trigger-4:
           cron: "* * * * *"
+        after-job-2:
+          success: "job-2"
       """
     }
   end
@@ -40,9 +46,13 @@ defmodule OpenFn.ConfigTest do
   test "can parse a string", %{example_string: example} do
     {:ok, %Config{jobs: jobs, triggers: triggers}} = Config.parse(example)
 
-    assert [%Job{name: "job-1"}, %Job{name: "job-2"}, %Job{name: "job-3"}] = jobs
+    assert Enum.map(1..4, fn i ->
+             jobs |> Enum.any?(fn j -> j.name == "job-#{i}" end)
+           end)
+           |> Enum.all?()
 
     assert [
+             %FlowTrigger{name: "after-job-2", success: "job-2"},
              %CriteriaTrigger{name: "trigger-2"},
              %CriteriaTrigger{name: "trigger-3"},
              %CronTrigger{name: "trigger-4", cron: "* * * * *"}
@@ -53,24 +63,48 @@ defmodule OpenFn.ConfigTest do
   test "jobs_for/1", %{example_string: example} do
     {:ok, config} = Config.parse(example)
 
-    assert [%Job{name: "job-1"}] = Config.jobs_for(config, [%CriteriaTrigger{name: "trigger-2"}])
+    assert [%Job{name: "job-1"}] =
+             config
+             |> Config.jobs_for([%CriteriaTrigger{name: "trigger-2"}])
 
     assert [%Job{name: "job-2"}, %Job{name: "job-3"}] =
-             Config.jobs_for(config, [%CriteriaTrigger{name: "trigger-3"}])
+             config
+             |> Config.jobs_for([%CriteriaTrigger{name: "trigger-3"}])
 
-    assert [] = Config.jobs_for(config, [%CriteriaTrigger{name: "trigger-nope"}])
+    assert [%Job{name: "job-4"}] =
+             config
+             |> Config.jobs_for(
+               Config.job_triggers_for(config, %Job{name: "job-2"})
+               |> Enum.map(&elem(&1, 1))
+             )
+
+    assert [] =
+             config
+             |> Config.jobs_for([%CriteriaTrigger{name: "trigger-nope"}])
   end
 
   @tag :config
-  test "triggers/1", %{example_string: example} do
+  test "triggers/2", %{example_string: example} do
     {:ok, config} = Config.parse(example)
 
     assert [%{name: "trigger-4"}] = Config.triggers(config, :cron)
-    assert [%{name: "trigger-2"},  %{name: "trigger-3"}] = Config.triggers(config, :criteria)
 
-    # assert [%Job{name: "job-2"}, %Job{name: "job-3"}] =
-    #          Config.jobs_for(config, [%CriteriaTrigger{name: "trigger-3"}])
+    assert [
+             %{name: "trigger-2"},
+             %{name: "trigger-3"}
+           ] = Config.triggers(config, :criteria)
 
-    # assert [] = Config.jobs_for(config, [%CriteriaTrigger{name: "trigger-nope"}])
+    assert [
+             %{name: "after-job-2"}
+           ] = Config.triggers(config, :flow)
+  end
+
+  test "job_triggers_for/2", %{example_string: example} do
+    {:ok, config} = Config.parse(example)
+
+    job = %Job{name: "job-2"}
+    trigger_job = config.jobs |> Enum.at(3)
+
+    assert [{^trigger_job, %{name: "after-job-2"}}] = Config.job_triggers_for(config, job)
   end
 end

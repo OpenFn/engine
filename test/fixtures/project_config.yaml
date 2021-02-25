@@ -27,3 +27,6 @@ triggers:
     criteria: '{"b":2}'
   trigger-4:
     cron: '* * * * *'
+  after-job-2:
+    success:  job-2
+      

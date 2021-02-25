@@ -7,7 +7,7 @@ defmodule OpenFn.RunDispatcher.UnitTest do
     Temp.track!
 
     queue = :opq_test
-    run_dispatcher = :test_run_dispatcher
+    run_dispatcher = :run_dispatcher_test
     job_state_repo_name = :test_run_repo
 
     start_supervised!(%{id: OPQ, start: {OPQ, :init, [[name: queue]]}})
