@@ -17,7 +17,14 @@ defmodule OpenFn.Engine.MixProject do
       name: "OpenFn.Engine",
       source_url: @source_url,
       # homepage_url: "http://YOUR_PROJECT_HOMEPAGE",
-      docs: docs()
+      docs: docs(),
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
+      ]
     ]
   end
 
@@ -36,13 +43,14 @@ defmodule OpenFn.Engine.MixProject do
   defp deps do
     [
       {:ex_doc, "~> 0.22", only: :dev, runtime: false},
+      {:excoveralls, "~> 0.11.2", only: [:test]},
       {:exjsonpath, "~> 0.1"},
+      {:jason, "~> 1.2"},
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:opq, github: "fredwu/opq", ref: "08406f5"},
+      {:quantum, "~> 3.3.0"},
       {:rambo, "~> 0.3.3"},
       {:temp, "~> 0.4"},
-      {:jason, "~> 1.2"},
-      {:quantum, "~> 3.3.0"},
       {:yaml_elixir, "~> 2.5"}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
