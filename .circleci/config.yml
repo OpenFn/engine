@@ -18,7 +18,7 @@ jobs:
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix do deps.get, compile
-      - run: MIX_ENV=test mix coveralls.json -o ./test-reports
+      - run: mix coveralls.json -o ./test-reports
 
       - store_test_results:
           path: test-reports/
