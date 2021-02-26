@@ -5,7 +5,7 @@ jobs:
   build:
     parallelism: 1
     docker:
-      - image: circleci/elixir:1.10.3-node
+      - image: circleci/elixir:1.11.3-node
         environment:
           MIX_ENV: test
 
@@ -14,11 +14,10 @@ jobs:
       - checkout
 
       - run: mkdir ./tmp
-      - run: mkdir test-reports
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix do deps.get, compile
-      - run: mix coveralls.json -o ./test-reports
+      - run: mix coveralls.json -o ./tmp
 
       - store_test_results:
-          path: test-reports/
+          path: ./tmp
