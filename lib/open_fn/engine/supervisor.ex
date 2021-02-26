@@ -106,6 +106,6 @@ defmodule OpenFn.Engine.Supervisor do
         :error -> []
       end
 
-    @defaults |> Keyword.merge(conf) |> Keyword.merge(opts) |> IO.inspect()
+    @defaults |> Keyword.merge(conf) |> Keyword.merge(opts)
   end
 end
