@@ -27,4 +27,6 @@ openfn_engine-*.tar
 
 /tmp/
 
-/test-reports/*
+# test reports
+*report_file_test.xml
+excoveralls.json
