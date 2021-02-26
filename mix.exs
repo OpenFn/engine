@@ -51,7 +51,8 @@ defmodule OpenFn.Engine.MixProject do
       {:quantum, "~> 3.3.0"},
       {:rambo, "~> 0.3.3"},
       {:temp, "~> 0.4"},
-      {:yaml_elixir, "~> 2.5"}
+      {:yaml_elixir, "~> 2.5"},
+      {:junit_formatter, "~> 3.0", only: [:test]}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]

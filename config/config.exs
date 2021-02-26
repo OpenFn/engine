@@ -5,4 +5,4 @@ config :openfn_engine,
        project_config: "file://test/fixtures/project_config.yaml",
        name: Engine
 
-# import_config "#{config_env()}.exs"
+import_config "#{Mix.env()}.exs"
