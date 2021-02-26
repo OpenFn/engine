@@ -43,6 +43,15 @@ defmodule OpenFn.Engine do
     OpenFn.RunBroadcaster.handle_trigger(run_broadcaster, trigger)
   end
 
+  def get_job_state(job_state_repo, %Job{} = job) do
+    path = OpenFn.JobStateRepo.get_last_persisted_state_path(job_state_repo, job)
+
+    case File.stat(path) do
+      {:ok, _stat} -> Jason.decode!(File.read!(path))
+      {:error, _reason} -> nil
+    end
+  end
+
   def config(engine, key) when is_atom(key) do
     :"#{engine}_registry"
     |> Registry.meta(key)

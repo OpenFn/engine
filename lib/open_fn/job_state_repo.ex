@@ -43,14 +43,12 @@ defmodule OpenFn.JobStateRepo do
   end
 
   def handle_call({:register, job, state_path}, _from, state) do
+    dest_path = job_file_path(state.basedir, job, "last-persisted-state.json")
     :ok =
-      try_copy(
-        state_path,
-        job_file_path(state.basedir, job, "last-persisted-state.json")
-      )
+      try_copy(state_path, dest_path)
 
     Logger.debug("Adding run to repo.")
-    {:reply, :ok, state}
+    {:reply, dest_path, state}
   end
 
   def handle_call({:get_last_persisted_state_path, job}, _from, state) do

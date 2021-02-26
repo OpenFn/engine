@@ -2,7 +2,7 @@ defmodule OpenFn.Engine.UnitTest do
   use ExUnit.Case, async: true
   doctest OpenFn.Engine
 
-  alias OpenFn.{Message, Job, Result, Config}
+  alias OpenFn.{Message, Job, Result, Config, Engine}
 
   test "execute_sync/2" do
     body = Jason.decode!(~s({"a": 1}))
@@ -76,5 +76,30 @@ defmodule OpenFn.Engine.UnitTest do
     [{:ok, result}] = OpenFn.Engine.handle_trigger(config, trigger)
 
     assert File.read!(result.final_state_path) == "{}"
+  end
+
+  test "get_job_state/2" do
+    config_yaml = ~S"""
+    jobs:
+      job-3:
+        expression: none
+        language_pack: @openfn/language-common
+        trigger: trigger-2
+    """
+
+    Temp.track!()
+
+    job_state_repo = :engine_test_job_state_repo
+    start_supervised!({OpenFn.JobStateRepo, %OpenFn.JobStateRepo.StartOpts{name: job_state_repo, basedir: Temp.path!()}})
+
+    # {:ok, config} = Config.parse(config_yaml)
+
+    assert Engine.get_job_state(job_state_repo, %Job{name: "job-3"}) == nil
+
+    state_path = Temp.path!()
+    File.write!(state_path, ~s({"foo": "bar"}))
+    new_state = OpenFn.JobStateRepo.register(job_state_repo, %Job{name: "job-3"}, state_path)
+
+    assert Engine.get_job_state(job_state_repo, %Job{name: "job-3"}) == %{"foo" => "bar"}
   end
 end

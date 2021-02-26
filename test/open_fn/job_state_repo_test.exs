@@ -3,6 +3,7 @@ defmodule OpenFn.JobStateRepo.UnitTest do
   alias OpenFn.{JobStateRepo, Job}
 
   setup do
+    Temp.track!()
     repo_name = :test_run_repo
     basedir = Temp.path!()
 
@@ -26,4 +27,5 @@ defmodule OpenFn.JobStateRepo.UnitTest do
 
     JobStateRepo.get_last_persisted_state_path(repo, job) |> File.stat!()
   end
+
 end

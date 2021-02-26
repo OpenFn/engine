@@ -18,10 +18,14 @@ defmodule OpenFn.Engine.Application do
         OpenFn.Engine.Supervisor.start_link(@config)
       end
 
-      alias OpenFn.Message
+      alias OpenFn.{Message, Job}
 
       def handle_message(%Message{} = message) do
         OpenFn.Engine.handle_message(@config[:run_broadcaster_name], message)
+      end
+
+      def get_job_state(%Job{} = job) do
+        OpenFn.Engine.get_job_state(@config[:job_state_repo_name], job)
       end
 
       def config(key) when is_atom(key) do
