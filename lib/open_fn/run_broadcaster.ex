@@ -57,7 +57,8 @@ defmodule OpenFn.RunBroadcaster do
       |> Enum.map(fn job ->
         Run.new(job: job, initial_state: %{"data" => message.body})
       end)
-      |> Enum.map(&RunDispatcher.invoke_run(run_dispatcher, &1))
+
+    runs |> Enum.each(&RunDispatcher.invoke_run(run_dispatcher, &1))
 
     {:reply, runs, state}
   end
@@ -129,7 +130,8 @@ defmodule OpenFn.RunBroadcaster do
   end
 
   defp merge_states(states) when is_list(states) do
-    states |> Enum.map(fn state ->
+    states
+    |> Enum.map(fn state ->
       case state do
         {:file, path} -> File.read!(path) |> Jason.decode!()
         any -> any
