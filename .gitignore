@@ -26,3 +26,5 @@ openfn_engine-*.tar
 /priv/openfn/runtime
 
 /tmp/
+
+/test-reports/*
