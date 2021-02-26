@@ -67,8 +67,6 @@ defmodule OpenFn.Engine.Supervisor do
       end)
       |> Keyword.new()
 
-    IO.inspect(scheduler_jobs)
-
     run_broadcaster_opts = %OpenFn.RunBroadcaster.StartOpts{
       name: config[:run_broadcaster_name],
       config: project_config,
