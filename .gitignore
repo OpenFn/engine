@@ -26,7 +26,3 @@ openfn_engine-*.tar
 /priv/openfn/runtime
 
 /tmp/
-
-# test reports
-*report_file_test.xml
-excoveralls.json
