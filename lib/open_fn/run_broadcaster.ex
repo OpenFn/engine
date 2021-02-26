@@ -55,7 +55,7 @@ defmodule OpenFn.RunBroadcaster do
     runs =
       Config.jobs_for(config, triggers)
       |> Enum.map(fn job ->
-        Run.new(job: job, initial_state: message.body)
+        Run.new(job: job, initial_state: %{"data" => message.body})
       end)
       |> Enum.map(&RunDispatcher.invoke_run(run_dispatcher, &1))
 
