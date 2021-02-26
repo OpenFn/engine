@@ -1,4 +1,4 @@
-# OpenFn.Engine
+# OpenFn.Engine [![CircleCI](https://circleci.com/gh/OpenFn/engine.svg?style=svg)](https://circleci.com/gh/OpenFn/engine)
 
 A processing framework for executing jobs using the OpenFn ecosystem of 
 language packs.
