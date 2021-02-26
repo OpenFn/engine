@@ -22,7 +22,11 @@ defmodule OpenFn.ConfigTest do
         job-4:
           expression: none
           language_pack: language-common
-          trigger: after-job-2
+          trigger: after-job-2-success
+        job-5:
+          expression: none
+          language_pack: language-common
+          trigger: after-job-2-failure
 
       triggers:
         trigger-2:
@@ -31,8 +35,10 @@ defmodule OpenFn.ConfigTest do
           criteria: '{"b":2}'
         trigger-4:
           cron: "* * * * *"
-        after-job-2:
+        after-job-2-success:
           success: "job-2"
+        after-job-2-failure:
+          failure: "job-2"
       """
     }
   end
@@ -52,7 +58,8 @@ defmodule OpenFn.ConfigTest do
            |> Enum.all?()
 
     assert [
-             %FlowTrigger{name: "after-job-2", success: "job-2"},
+             %FlowTrigger{name: "after-job-2-failure", failure: "job-2"},
+             %FlowTrigger{name: "after-job-2-success", success: "job-2"},
              %CriteriaTrigger{name: "trigger-2"},
              %CriteriaTrigger{name: "trigger-3"},
              %CronTrigger{name: "trigger-4", cron: "* * * * *"}
@@ -71,7 +78,7 @@ defmodule OpenFn.ConfigTest do
              config
              |> Config.jobs_for([%CriteriaTrigger{name: "trigger-3"}])
 
-    assert [%Job{name: "job-4"}] =
+    assert [%Job{name: "job-4"}, %Job{name: "job-5"}] =
              config
              |> Config.jobs_for(
                Config.job_triggers_for(config, %Job{name: "job-2"})
@@ -95,7 +102,8 @@ defmodule OpenFn.ConfigTest do
            ] = Config.triggers(config, :criteria)
 
     assert [
-             %{name: "after-job-2"}
+             %{name: "after-job-2-failure"},
+             %{name: "after-job-2-success"}
            ] = Config.triggers(config, :flow)
   end
 
@@ -103,8 +111,12 @@ defmodule OpenFn.ConfigTest do
     {:ok, config} = Config.parse(example)
 
     job = %Job{name: "job-2"}
-    trigger_job = config.jobs |> Enum.at(3)
+    trigger_job = config.jobs |> Enum.find(fn j -> j.name == "job-4" end)
+    failure_job = config.jobs |> Enum.find(fn j -> j.name == "job-5" end)
 
-    assert [{^trigger_job, %{name: "after-job-2"}}] = Config.job_triggers_for(config, job)
+    assert [
+             {^failure_job, %{name: "after-job-2-failure"}},
+             {^trigger_job, %{name: "after-job-2-success"}}
+           ] = Config.job_triggers_for(config, job)
   end
 end

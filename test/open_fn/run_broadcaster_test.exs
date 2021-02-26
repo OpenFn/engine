@@ -17,15 +17,18 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
 
     config =
       Config.new(
-        triggers: [
-          CriteriaTrigger.new(name: "test", criteria: %{"a" => 1}),
-          cron_trigger = CronTrigger.new(name: "cron-trigger", cron: "* * * * *"),
-          flow_trigger = FlowTrigger.new(name: "after-test-job", success: "test-job")
-        ],
         jobs: [
           test_job = Job.new(name: "test-job", trigger: "test"),
           cron_job = Job.new(name: "cron-job", trigger: "cron-trigger"),
-          flow_job = Job.new(name: "flow-job", trigger: "after-test-job")
+          success_flow_job = Job.new(name: "flow-job", trigger: "after-test-job"),
+          failure_flow_job = Job.new(name: "flow-job-failure", trigger: "after-test-job-failure")
+        ],
+        triggers: [
+          CriteriaTrigger.new(name: "test", criteria: %{"a" => 1}),
+          cron_trigger = CronTrigger.new(name: "cron-trigger", cron: "* * * * *"),
+          success_flow_trigger = FlowTrigger.new(name: "after-test-job", success: "test-job"),
+          failure_flow_trigger =
+            FlowTrigger.new(name: "after-test-job-failure", failure: "test-job")
         ]
       )
 
@@ -54,10 +57,12 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
     %{
       broadcaster: :test_run_broadcaster,
       cron_trigger: cron_trigger,
-      flow_trigger: flow_trigger,
+      success_flow_trigger: success_flow_trigger,
+      failure_flow_trigger: failure_flow_trigger,
       job_state_repo: job_state_repo_name,
       cron_job: cron_job,
-      flow_job: flow_job,
+      success_flow_job: success_flow_job,
+      failure_flow_job: failure_flow_job,
       test_job: test_job
     }
   end
@@ -142,8 +147,10 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
   end
 
   test "matches up a FlowTrigger to a Run", %{
-    flow_job: flow_job,
-    flow_trigger: flow_trigger,
+    success_flow_job: success_flow_job,
+    failure_flow_job: failure_flow_job,
+    success_flow_trigger: success_flow_trigger,
+    failure_flow_trigger: failure_flow_trigger,
     job_state_repo: job_state_repo,
     test_job: test_job
   } do
@@ -152,7 +159,7 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
 
     JobStateRepo.register(
       job_state_repo,
-      flow_job,
+      success_flow_job,
       state_path
     )
 
@@ -161,24 +168,19 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
       %Run{job: test_job, result: %OpenFn.Result{exit_code: 0}}
     )
 
-    got_a_run =
+    run =
       receive do
-        {:invoke_run, %Run{} = run} ->
-          assert run.job == flow_job
-          assert run.trigger == flow_trigger
-
-          {:file, path} = run.initial_state
-          assert String.contains?(path, "/flow-job/last-persisted-state.json")
-
-          true
-        any ->
-          IO.puts("Got: #{inspect(any, pretty: true)}")
-          false
+        {:invoke_run, %Run{} = run} -> run
+        any -> IO.puts("Got: #{inspect(any, pretty: true)}") && false
       after
         100 -> false
       end
 
-    assert got_a_run
+    assert run.job == success_flow_job
+    assert run.trigger == success_flow_trigger
+
+    {:file, path} = run.initial_state
+    assert String.contains?(path, "/flow-job/last-persisted-state.json")
 
     RunBroadcaster.process(
       :test_run_broadcaster,
@@ -186,6 +188,7 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
     )
 
     # Will not invoke a flow if the Run failed.
-    refute_receive {:invoke_run, _}
+    assert_receive {:invoke_run, %Run{trigger: ^failure_flow_trigger, job: ^failure_flow_job}}
+    refute_received {:invoke_run, %Run{trigger: ^success_flow_trigger}}
   end
 end

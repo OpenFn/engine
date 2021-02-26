@@ -55,8 +55,8 @@ defmodule OpenFn.RunDispatcher do
 
       Process.monitor(pid)
 
-
       # Intentionally wait or else or we'll dispatch too many Runs
+      # this function should take as long as the command takes.
       receive do
         {:run_complete, run} ->
           RunBroadcaster.process(state.run_broadcaster, run)

@@ -72,6 +72,17 @@ defmodule OpenFn.Config do
 
   A cron matcher, which gets triggered at the interval specified.
 
+  **success**
+
+  A Flow matcher, which gets triggered on the success of the specified job.
+
+  _Success is specified as a job exit code of `0`_
+
+  **failure**
+
+  A Flow matcher, which gets triggered when the specified job fails.
+
+  _Failure is specified as **any** non-zero job exit code_
   """
 
   defstruct jobs: [], triggers: []
@@ -136,6 +147,9 @@ defmodule OpenFn.Config do
 
           ["success"] ->
             %FlowTrigger{name: name, success: Map.get(trigger_opts, "success")}
+
+          ["failure"] ->
+            %FlowTrigger{name: name, failure: Map.get(trigger_opts, "failure")}
         end
       end
 
@@ -180,7 +194,7 @@ defmodule OpenFn.Config do
   """
   def job_triggers_for(%__MODULE__{} = config, job) do
     triggers(config, :flow)
-    |> Enum.filter(fn trigger -> trigger.success == job.name end)
+    |> Enum.filter(fn trigger -> (trigger.success || trigger.failure) == job.name end)
     |> Enum.map(fn trigger -> {jobs_for(config, [trigger]), trigger} end)
     |> Enum.flat_map(fn {jobs, trigger} -> Enum.map(jobs, fn j -> {j, trigger} end) end)
   end

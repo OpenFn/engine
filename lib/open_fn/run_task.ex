@@ -20,8 +20,6 @@ defmodule OpenFn.RunTask do
   end
 
   def start_link(opts) do
-    Logger.debug("RunTask.start_link/1")
-
     GenServer.start_link(__MODULE__, struct!(State, opts ++ [parent: self()]))
   end
 

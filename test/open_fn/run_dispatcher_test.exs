@@ -15,14 +15,6 @@ defmodule OpenFn.RunDispatcher.UnitTest do
     start_supervised!(%{id: OPQ, start: {OPQ, :init, [[name: queue]]}})
     start_supervised!({Task.Supervisor, [name: :task_supervisor]})
 
-    # start_supervised!(
-    #   {OpenFn.JobStateRepo,
-    #    %OpenFn.JobStateRepo.StartOpts{
-    #      name: job_state_repo_name,
-    #      basedir: Temp.path!()
-    #    }}
-    # )
-
     start_supervised!(%{
       id: :fake_run_broadcaster,
       start: {TestServer, :start_link, [[name: run_broadcaster, owner: self()]]}
