@@ -112,7 +112,7 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
     assert got_a_run
 
     state_path = Temp.path!(suffix: "run-broadcaster-test.json")
-    File.touch!(state_path)
+    File.write!(state_path, ~s({"foo": 1}))
 
     JobStateRepo.register(
       job_state_repo,

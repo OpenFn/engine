@@ -134,13 +134,17 @@ defmodule OpenFn.RunTask do
         {ref, _answer},
         %{
           ref: ref,
-          run: %Run{job: job, run_spec: %{final_state_path: final_state_path}},
+          run: %Run{job: job, run_spec: %{final_state_path: final_state_path}, exit_code: exit_code},
           job_state_repo: job_state_repo
         } = state
       ) do
     # We don't care about the DOWN message now, so let's demonitor and flush it
     Process.demonitor(ref, [:flush])
-    JobStateRepo.register(job_state_repo, job, final_state_path)
+
+    if exit_code == 0 do
+      JobStateRepo.register(job_state_repo, job, final_state_path)
+    end
+
     maybe_notify_parent(state.parent, {:run_complete, state.run})
     done(self())
 

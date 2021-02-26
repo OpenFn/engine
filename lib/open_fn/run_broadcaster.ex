@@ -85,6 +85,8 @@ defmodule OpenFn.RunBroadcaster do
         # TODO: credentials
         next_state = %{}
 
+        IO.inspect([source_state, next_state])
+
         initial_state = merge_states([source_state, next_state])
 
         Run.new(job: job, trigger: trigger, initial_state: initial_state)
