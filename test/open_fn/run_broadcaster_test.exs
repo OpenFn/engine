@@ -126,24 +126,12 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
     )
 
     # Should receive a call to :invoke_run with the previous runs state
-    got_a_run =
-      receive do
-        {:invoke_run,
+      assert_receive {:invoke_run,
          %OpenFn.Run{
            trigger: ^cron_trigger,
-           initial_state: {:file, path}
-         }} ->
-          assert String.contains?(path, "/cron-job/last-persisted-state.json")
-          true
+           initial_state: %{"foo" => 1}
+         }}
 
-        any ->
-          IO.puts("Got: #{inspect(any)}")
-          false
-      after
-        100 -> false
-      end
-
-    assert got_a_run
   end
 
   test "matches up a FlowTrigger to a Run", %{
