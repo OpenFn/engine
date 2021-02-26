@@ -70,7 +70,7 @@ defmodule OpenFn.RunBroadcaster do
       |> Enum.map(fn job ->
         last_state_path = JobStateRepo.get_last_persisted_state_path(state.job_state_repo, job)
 
-        initial_state =
+        source_state =
           case File.stat(last_state_path) do
             {:ok, _} ->
               # assume a file path
@@ -80,6 +80,11 @@ defmodule OpenFn.RunBroadcaster do
               # file not found, send an empty map to be serialised to json
               %{}
           end
+
+        # TODO: credentials
+        next_state = %{}
+
+        initial_state = merge_states([source_state, next_state])
 
         Run.new(job: job, trigger: trigger, initial_state: initial_state)
       end)
@@ -96,11 +101,11 @@ defmodule OpenFn.RunBroadcaster do
       |> Enum.filter(fn {_job, trigger} ->
         (run.result.exit_code == 0 && trigger.success) || (run.result > 0 && trigger.failure)
       end)
-      |> Enum.map(fn {job, trigger} ->
+      |> Enum.map(fn {triggered_job, trigger} ->
         # Get the final_state from the Run that triggered this.
         last_state_path = JobStateRepo.get_last_persisted_state_path(state.job_state_repo, job)
 
-        initial_state =
+        source_state =
           case File.stat(last_state_path) do
             {:ok, _} ->
               # assume a file path
@@ -111,11 +116,26 @@ defmodule OpenFn.RunBroadcaster do
               %{}
           end
 
-        Run.new(job: job, trigger: trigger, initial_state: initial_state)
+        # TODO: credentials
+        next_state = %{}
+
+        initial_state = merge_states([source_state, next_state])
+
+        Run.new(job: triggered_job, trigger: trigger, initial_state: initial_state)
       end)
       |> Enum.map(&RunDispatcher.invoke_run(run_dispatcher, &1))
 
     {:reply, runs, state}
+  end
+
+  defp merge_states(states) when is_list(states) do
+    states |> Enum.map(fn state ->
+      case state do
+        {:file, path} -> File.read!(path) |> Jason.decode!()
+        any -> any
+      end
+    end)
+    |> Enum.reduce(fn state, acc -> Map.merge(acc, state) end)
   end
 
   def handle_message(server, message) do

@@ -155,40 +155,46 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
     test_job: test_job
   } do
     state_path = Temp.path!(suffix: "run-broadcaster-test.json")
-    File.touch!(state_path)
+    File.write!(state_path, ~s({"foo": "bar"}))
 
     JobStateRepo.register(
       job_state_repo,
-      success_flow_job,
+      test_job,
       state_path
     )
 
+    # test-job succeeded
     RunBroadcaster.process(
       :test_run_broadcaster,
       %Run{job: test_job, result: %OpenFn.Result{exit_code: 0}}
     )
 
-    run =
-      receive do
-        {:invoke_run, %Run{} = run} -> run
-        any -> IO.puts("Got: #{inspect(any, pretty: true)}") && false
-      after
-        100 -> false
-      end
-
-    assert run.job == success_flow_job
-    assert run.trigger == success_flow_trigger
-
-    {:file, path} = run.initial_state
-    assert String.contains?(path, "/flow-job/last-persisted-state.json")
+    assert_receive {
+      :invoke_run,
+      %Run{
+        trigger: ^success_flow_trigger,
+        job: ^success_flow_job,
+        initial_state: %{"foo" => "bar"}
+      }
+    }
 
     RunBroadcaster.process(
       :test_run_broadcaster,
       %Run{job: test_job, result: %OpenFn.Result{exit_code: 1}}
     )
 
-    # Will not invoke a flow if the Run failed.
-    assert_receive {:invoke_run, %Run{trigger: ^failure_flow_trigger, job: ^failure_flow_job}}
-    refute_received {:invoke_run, %Run{trigger: ^success_flow_trigger}}
+    assert_receive {
+      :invoke_run,
+      %Run{
+        trigger: ^failure_flow_trigger,
+        job: ^failure_flow_job,
+        initial_state: %{"foo" => "bar"}
+      }
+    }
+
+    refute_received {
+      :invoke_run,
+      %Run{trigger: ^success_flow_trigger}
+    }
   end
 end
