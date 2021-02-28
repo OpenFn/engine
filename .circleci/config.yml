@@ -17,6 +17,7 @@ jobs:
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix do deps.get, compile
+      - run: mix openfn.install.runtime
       - run: mix coveralls.json -o ./tmp
 
       - store_test_results:
