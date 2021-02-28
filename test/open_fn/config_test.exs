@@ -1,17 +1,23 @@
 defmodule OpenFn.ConfigTest do
   use ExUnit.Case, async: true
 
-  alias OpenFn.{Config, CriteriaTrigger, CronTrigger, FlowTrigger, Job}
+  alias OpenFn.{Config, Credential, CriteriaTrigger, CronTrigger, FlowTrigger, Job}
 
   setup do
     %{
       example_string: ~S"""
+      credentials:
+        my-secret-credential:
+          username: 'user@example.com'
+          password: 'shhh'
+
       jobs:
         job-1:
           expression: none
           language_pack: language-common
           trigger: trigger-2
         job-2:
+          credential: my-secret-credential
           expression: none
           language_pack: language-common
           trigger: trigger-3
@@ -50,7 +56,8 @@ defmodule OpenFn.ConfigTest do
 
   @tag :config
   test "can parse a string", %{example_string: example} do
-    {:ok, %Config{jobs: jobs, triggers: triggers}} = Config.parse(example)
+    {:ok, %Config{jobs: jobs, triggers: triggers, credentials: credentials}} =
+      Config.parse(example)
 
     assert Enum.map(1..4, fn i ->
              jobs |> Enum.any?(fn j -> j.name == "job-#{i}" end)
@@ -64,6 +71,13 @@ defmodule OpenFn.ConfigTest do
              %CriteriaTrigger{name: "trigger-3"},
              %CronTrigger{name: "trigger-4", cron: "* * * * *"}
            ] = triggers
+
+    assert [
+             %Credential{
+               name: "my-secret-credential",
+               body: %{"password" => "shhh", "username" => "user@example.com"}
+             }
+           ] = credentials
   end
 
   @tag :config
@@ -118,5 +132,14 @@ defmodule OpenFn.ConfigTest do
              {^failure_job, %{name: "after-job-2-failure"}},
              {^trigger_job, %{name: "after-job-2-success"}}
            ] = Config.job_triggers_for(config, job)
+  end
+
+  test "credential_body_for/2", %{example_string: example} do
+    {:ok, config} = Config.parse(example)
+
+    job = Enum.find(config.jobs, fn x -> x.name == "job-2" end)
+
+    assert %{"password" => "shhh", "username" => "user@example.com"} =
+             Config.credential_body_for(config, job)
   end
 end

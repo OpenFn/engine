@@ -55,7 +55,13 @@ defmodule OpenFn.RunBroadcaster do
     runs =
       Config.jobs_for(config, triggers)
       |> Enum.map(fn job ->
-        Run.new(job: job, initial_state: %{"data" => message.body})
+        Run.new(
+          job: job,
+          initial_state: %{
+            "data" => message.body,
+            "configuration" => Config.credential_body_for(config, job)
+          }
+        )
       end)
 
     runs |> Enum.each(&RunDispatcher.invoke_run(run_dispatcher, &1))
@@ -82,10 +88,7 @@ defmodule OpenFn.RunBroadcaster do
               %{}
           end
 
-        # TODO: credentials
-        next_state = %{}
-
-        IO.inspect([source_state, next_state])
+        next_state = %{"configuration" => Config.credential_body_for(config, job)}
 
         initial_state = merge_states([source_state, next_state])
 
@@ -119,8 +122,7 @@ defmodule OpenFn.RunBroadcaster do
               %{}
           end
 
-        # TODO: credentials
-        next_state = %{}
+        next_state = %{"configuration" => Config.credential_body_for(config, job)}
 
         initial_state = merge_states([source_state, next_state])
 

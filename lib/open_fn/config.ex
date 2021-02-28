@@ -6,8 +6,13 @@ defmodule OpenFn.Config do
   A config file has the following structure:
 
   ```yaml
+  credentials:
+    my-secret-credential:
+      username: me
+      password: shhhh
   jobs:
     job-one:
+      credential: my-secret-credential
       expression: >
         alterState((state) => {
           console.log("Hi there!")
@@ -85,10 +90,10 @@ defmodule OpenFn.Config do
   _Failure is specified as **any** non-zero job exit code_
   """
 
-  defstruct jobs: [], triggers: []
-  @type t :: %__MODULE__{jobs: any(), triggers: any()}
+  defstruct jobs: [], triggers: [], credentials: []
+  @type t :: %__MODULE__{jobs: any(), triggers: any(), credentials: any()}
 
-  alias OpenFn.{CriteriaTrigger, CronTrigger, FlowTrigger, Job}
+  alias OpenFn.{CriteriaTrigger, CronTrigger, FlowTrigger, Job, Credential}
 
   def new(fields) do
     struct!(__MODULE__, fields)
@@ -134,6 +139,7 @@ defmodule OpenFn.Config do
   def from_map(data) do
     trigger_data = data["triggers"]
     job_data = data["jobs"]
+    credential_data = data["credentials"]
 
     triggers =
       for {name, trigger_opts} <- trigger_data, into: [] do
@@ -157,15 +163,25 @@ defmodule OpenFn.Config do
       for {name, job_opts} <- job_data, into: [] do
         %Job{
           name: name,
+          credential: Map.get(job_opts, "credential"),
           trigger: Map.get(job_opts, "trigger"),
           language_pack: Map.get(job_opts, "language_pack"),
           expression: Map.get(job_opts, "expression")
         }
       end
 
+    credentials =
+      for {name, credential_body} <- credential_data, into: [] do
+        %Credential{
+          name: name,
+          body: credential_body
+        }
+      end
+
     %__MODULE__{
       jobs: jobs,
-      triggers: triggers
+      triggers: triggers,
+      credentials: credentials
     }
   end
 
@@ -197,5 +213,20 @@ defmodule OpenFn.Config do
     |> Enum.filter(fn trigger -> (trigger.success || trigger.failure) == job.name end)
     |> Enum.map(fn trigger -> {jobs_for(config, [trigger]), trigger} end)
     |> Enum.flat_map(fn {jobs, trigger} -> Enum.map(jobs, fn j -> {j, trigger} end) end)
+  end
+
+  @doc """
+  Returns the :body of a credential for a job using that credential.
+  """
+  def credential_body_for(%__MODULE__{} = config, job) do
+    case job.credential do
+      nil ->
+        nil
+
+      credential_name ->
+        config.credentials
+        |> Enum.find(fn x -> x.name == credential_name end)
+        |> Map.get(:body)
+    end
   end
 end
