@@ -36,15 +36,18 @@ defmodule OpenFn.RunDispatcher.UnitTest do
        }}
     )
 
-    run = %Run{job: %OpenFn.Job{name: "test-job"}, run_spec: run_spec_fixture()}
+    run = %Run{
+      job: %OpenFn.Job{name: "test-job", language_pack: "@openfn/language-common"},
+      initial_state: %{}
+    }
 
     %{run_dispatcher: run_dispatcher, run: run}
   end
 
-  test "invoke_run/2", %{run: run, run_dispatcher: run_dispatcher} do
+  test "invoke_run/2", %{run: %{job: job} = run, run_dispatcher: run_dispatcher} do
     RunDispatcher.invoke_run(run_dispatcher, run)
 
     assert_receive {:process_run, %Run{}}, 1500
-    assert_receive {:register, _, _}, 1500
+    assert_received {:register, ^job, _}
   end
 end

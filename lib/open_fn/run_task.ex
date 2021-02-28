@@ -141,7 +141,7 @@ defmodule OpenFn.RunTask do
     # We don't care about the DOWN message now, so let's demonitor and flush it
     Process.demonitor(ref, [:flush])
 
-    if Map.get(result || %{}, :exit_code, false) do
+    if result.exit_code == 0 do
       JobStateRepo.register(job_state_repo, job, final_state_path)
     end
 

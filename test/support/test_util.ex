@@ -4,10 +4,21 @@ defmodule Engine.TestUtil do
     File.read!(path)
   end
 
-  def run_spec_fixture() do
-    %OpenFn.RunSpec{
-      final_state_path: Temp.path!()
-    }
+  def run_spec_fixture(opts \\ []) do
+    OpenFn.RunSpec
+    |> struct!(
+      Enum.into(opts, %{
+        expression_path: write_temp!(~s[alterState((state) => state)]),
+        state_path: write_temp!(~s[{"foo": "bar"}]),
+        language_pack: "@openfn/language-common",
+        final_state_path: Temp.path!()
+      })
+    )
+  end
+
+  defp write_temp!(contents) do
+    File.write!(path = Temp.path!(), contents)
+    path
   end
 
   import ExUnit.Assertions
