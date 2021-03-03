@@ -13,7 +13,6 @@ defmodule OpenFn.Engine.Supervisor do
   require Logger
 
   @defaults [
-    name: __MODULE__,
     run_broadcaster_name: :engine_run_broadcaster,
     job_state_repo_name: :engine_job_state_repo,
     job_state_basedir: "./tmp"
@@ -32,8 +31,6 @@ defmodule OpenFn.Engine.Supervisor do
   end
 
   def init(config) do
-    # TODO: this would be the place to _receive_ compile-time config from
-    # the Application module (can also be empty), and then merge in runtime config
     name = config[:name]
     project_config = OpenFn.Config.parse!(config[:project_config])
 
@@ -99,13 +96,28 @@ defmodule OpenFn.Engine.Supervisor do
     Supervisor.init(children, strategy: :one_for_one)
   end
 
-  def config(otp_app, module, opts) do
+  def compile_config(otp_app, module, opts) do
     conf =
       case Application.fetch_env(otp_app, module) do
         {:ok, conf} -> conf
         :error -> []
       end
 
-    @defaults |> Keyword.merge(conf) |> Keyword.merge(opts)
+    @defaults
+    |> Keyword.merge(name: module)
+    |> Keyword.merge(conf)
+    |> Keyword.merge(opts)
+  end
+
+  def runtime_config(compile_config, opts) do
+    conf =
+      case Application.fetch_env(compile_config[:otp_app], compile_config[:name]) do
+        {:ok, conf} -> conf
+        :error -> []
+      end
+
+    compile_config
+    |> Keyword.merge(conf)
+    |> Keyword.merge(opts)
   end
 end
