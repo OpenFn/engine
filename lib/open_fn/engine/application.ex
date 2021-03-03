@@ -3,8 +3,8 @@ defmodule OpenFn.Engine.Application do
 
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
-      @otp_app opts[:otp_app] || raise "engine expects :otp_app to be given"
-      @config OpenFn.Engine.Supervisor.config @otp_app, __MODULE__, opts
+      @otp_app opts[:otp_app] || raise("engine expects :otp_app to be given")
+      @config OpenFn.Engine.Supervisor.compile_config(@otp_app, __MODULE__, opts)
 
       def child_spec(opts) do
         %{
@@ -15,7 +15,8 @@ defmodule OpenFn.Engine.Application do
       end
 
       def start_link(opts \\ []) do
-        OpenFn.Engine.Supervisor.start_link(@config)
+        config = OpenFn.Engine.Supervisor.runtime_config(@config, opts)
+        OpenFn.Engine.Supervisor.start_link(config)
       end
 
       alias OpenFn.{Message, Job}
@@ -29,7 +30,8 @@ defmodule OpenFn.Engine.Application do
       end
 
       def config(key) when is_atom(key) do
-        @config[key]
+        OpenFn.Engine.Supervisor.runtime_config(@config, [])
+        |> Keyword.get(key)
       end
 
       defp project_config! do
