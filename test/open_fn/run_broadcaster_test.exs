@@ -9,6 +9,7 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
     CronTrigger,
     FlowTrigger,
     Job,
+    Credential,
     Run
   }
 
@@ -17,8 +18,12 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
 
     config =
       Config.new(
+        credentials: [
+          test_credential =
+            Credential.new(name: "test-credential", body: %{username: "un", password: "pw"})
+        ],
         jobs: [
-          test_job = Job.new(name: "test-job", trigger: "test"),
+          test_job = Job.new(name: "test-job", trigger: "test", credential: "test-credential"),
           cron_job = Job.new(name: "cron-job", trigger: "cron-trigger"),
           success_flow_job = Job.new(name: "flow-job", trigger: "after-test-job"),
           failure_flow_job = Job.new(name: "flow-job-failure", trigger: "after-test-job-failure")
@@ -63,7 +68,8 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
       cron_job: cron_job,
       success_flow_job: success_flow_job,
       failure_flow_job: failure_flow_job,
-      test_job: test_job
+      test_job: test_job,
+      test_credential: test_credential
     }
   end
 

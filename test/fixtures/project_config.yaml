@@ -5,11 +5,11 @@ jobs:
         console.log("Hi there!")
         return state;
       })
-    language_pack: '@openfn/language-common'
+    language_pack: "@openfn/language-common"
     trigger: trigger-2
   job-2:
     expression: none
-    language_pack: '@openfn/language-common'
+    language_pack: "@openfn/language-common"
     trigger: trigger-3
   job-3:
     expression: >
@@ -17,7 +17,7 @@ jobs:
         console.log("Hi there!")
         return state;
       })
-    language_pack: '@openfn/language-common'
+    language_pack: "@openfn/language-common"
     trigger: trigger-4
 
 triggers:
@@ -26,7 +26,11 @@ triggers:
   trigger-3:
     criteria: '{"b":2}'
   trigger-4:
-    cron: '* * * * *'
+    cron: "* * * * *"
   after-job-2:
-    success:  job-2
-      
+    success: job-2
+
+credentials:
+  credential-1:
+    username: "sample@example.com"
+    password: "shhh"

@@ -1,10 +1,7 @@
-defmodule OpenFn.Job do
+defmodule OpenFn.Credential do
   defstruct [
     :name,
-    :expression,
-    :credential,
-    :language_pack,
-    :trigger
+    :body
   ]
 
   def new(fields \\ []) do
