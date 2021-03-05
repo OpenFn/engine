@@ -36,7 +36,6 @@ defmodule OpenFn.RunDispatcher do
       File.mkdir_p!(basedir)
     end
 
-    IO.puts("RunDispatcher started")
     {:ok, opts}
   end
 
@@ -60,6 +59,7 @@ defmodule OpenFn.RunDispatcher do
       receive do
         {:run_complete, run} ->
           RunBroadcaster.process(state.run_broadcaster, run)
+
         {:DOWN, _ref, :process, ^pid, :normal} ->
           nil
       end

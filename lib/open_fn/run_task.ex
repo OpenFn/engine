@@ -40,26 +40,40 @@ defmodule OpenFn.RunTask do
 
   def execute(server, task_supervisor) do
     Logger.debug("RunTask.execute/2")
+
+
     # Using async_nolink, we get messages from the Task.Supervisor which we
     # handle via handle_info/2 below
     Task.Supervisor.async_nolink(task_supervisor, fn ->
       server |> mark_started()
       runspec = server |> get_runspec()
 
-      log_f = fn line -> GenServer.call(server, {:add_log_line, line}) end
+      {log_stream, log_callback} = OpenFn.LogStream.create()
 
       IO.puts("Starting task")
-      {_msg, result} = OpenFn.ShellRuntime.run(runspec, log: log_f)
+      {_msg, result} = OpenFn.ShellRuntime.run(runspec, log: log_callback)
       IO.puts("Finishing task")
+
+      log_callback.(:complete)
+
       server |> mark_finished()
       server |> set_result(result)
+
+      log_stream
+      |> Stream.transform([], fn chunk, acc ->
+        String.split(Enum.join(acc) <> chunk, "\n")
+        |> Enum.split(-1)
+      end)
+      |> Enum.each(fn chunk ->
+        GenServer.call(server, {:add_log_line, chunk})
+      end)
 
       result
     end)
   end
 
   def handle_call({:add_log_line, line}, _from, %{run: run} = state) do
-    run = Run.add_log_line(run, line)
+    run = Run.add_log_line(run, {:stdout, line })
 
     {:reply, run, %{state | run: run}}
   end
@@ -121,7 +135,7 @@ defmodule OpenFn.RunTask do
   end
 
   def terminate(reason, state) do
-    Logger.debug("RunTask.terminate/2: #{inspect([reason, state])}")
+    Logger.debug("RunTask.terminate/2: #{inspect([reason, state], pretty: true)}")
   end
 
   def maybe_notify_parent(nil, _msg), do: :ok
