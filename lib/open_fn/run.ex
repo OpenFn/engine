@@ -43,6 +43,6 @@ defmodule OpenFn.Run do
   end
 
   def add_log_line(%{log: log} = run, {type, line}) do
-    %{run | log: [{type, line} | log]}
+    %{run | log: Enum.concat(log, [{type, line}])}
   end
 end
