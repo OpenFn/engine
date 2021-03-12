@@ -77,7 +77,6 @@ defmodule OpenFn.Run.Handler do
                log_agent_ref: log_agent_ref
              } = state
            ) do
-        IO.inspect(state, pretty: true)
 
         receive do
           # RunTask finished
