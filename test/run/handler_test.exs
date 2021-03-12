@@ -26,12 +26,11 @@ defmodule OpenFn.Run.Handler.UnitTest do
       }
     }
 
-    result = MyCustomHandler.start(run, context: self(), timeout: 600)
+    result = MyCustomHandler.start(run.run_spec, context: self(), timeout: 600)
 
     assert result.exit_reason == :killed
     assert result.log |> List.last() == "Going on break for 700..."
   end
-
 
   @tag timeout: 5_000
   test "calls custom callbacks" do
@@ -40,7 +39,8 @@ defmodule OpenFn.Run.Handler.UnitTest do
       run_spec: run_spec_fixture()
     }
 
-    MyCustomHandler.start(run, context: self())
+    result = MyCustomHandler.start(run.run_spec, context: self())
+    assert result.exit_reason == :ok
 
     assert_received(:yepper)
   end

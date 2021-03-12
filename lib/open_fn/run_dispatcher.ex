@@ -49,13 +49,17 @@ defmodule OpenFn.RunDispatcher do
     run = Run.add_run_spec(run, prepare_runspec(run, state.temp_opts))
 
     OPQ.enqueue(state.queue, fn ->
-      result = GenericHandler.start(run)
+      run = Run.mark_started(run)
+      result = GenericHandler.start(run.run_spec)
 
       if result.exit_code == 0 do
         JobStateRepo.register(state.job_state_repo, run.job, run.run_spec.final_state_path)
       end
 
-      RunBroadcaster.process(state.run_broadcaster, run)
+      RunBroadcaster.process(
+        state.run_broadcaster,
+        Run.mark_finished(run) |> Run.set_result(result)
+      )
     end)
 
     {:reply, :ok, state}

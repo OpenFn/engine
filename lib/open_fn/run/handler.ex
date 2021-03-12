@@ -1,5 +1,5 @@
 defmodule OpenFn.Run.Handler do
-  alias OpenFn.{Run}
+  alias OpenFn.{RunSpec}
 
   @type t :: module
 
@@ -30,7 +30,7 @@ defmodule OpenFn.Run.Handler do
       @behaviour Handler
 
       @impl Handler
-      def start(run, opts \\ []) do
+      def start(run_spec, opts \\ []) do
         {:ok, task_supervisor} = Task.Supervisor.start_link()
         {:ok, agent_supervisor} = DynamicSupervisor.start_link(strategy: :one_for_one)
         {:ok, log_agent} = DynamicSupervisor.start_child(agent_supervisor, {OpenFn.LogAgent, []})
@@ -46,7 +46,7 @@ defmodule OpenFn.Run.Handler do
           Task.Supervisor.async_nolink(task_supervisor, fn ->
             __MODULE__.on_start(context)
 
-            {_msg, result} = OpenFn.ShellRuntime.run(run.run_spec, rambo_opts)
+            {_msg, result} = OpenFn.ShellRuntime.run(run_spec, rambo_opts)
 
             __MODULE__.on_finish(context)
 
@@ -77,7 +77,6 @@ defmodule OpenFn.Run.Handler do
                log_agent_ref: log_agent_ref
              } = state
            ) do
-
         receive do
           # RunTask finished
           {^run_task_ref, result} ->
@@ -101,10 +100,6 @@ defmodule OpenFn.Run.Handler do
             # Something when wrong in the logger, when/if this gets reached
             # we need to decide what we want to be done.
             raise "Logging agent process ended prematurely"
-
-          # any ->
-          #   IO.inspect(any, label: "from any")
-          #   wait(state)
         end
       end
 
@@ -127,7 +122,7 @@ defmodule OpenFn.Run.Handler do
   @doc """
   The entrypoint for executing a run.
   """
-  @callback start(run :: %Run{}, opts :: []) :: OpenFn.Result.t()
+  @callback start(run_spec :: %RunSpec{}, opts :: []) :: OpenFn.Result.t()
 
   @doc """
   Called with context, if any - when the Run has been started.
