@@ -2,10 +2,6 @@ defmodule OpenFn.Engine.Scheduler do
   @moduledoc false
 
   use Quantum, otp_app: nil
-
-  # def init(opts) do
-  #   IO.inspect(opts)
-  # end
 end
 
 defmodule OpenFn.Engine.Supervisor do

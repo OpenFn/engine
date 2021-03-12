@@ -22,7 +22,7 @@ defmodule OpenFn.LogStream do
     {line_stream, callback}
   end
 
-  defp loop({partial_chunk, pending}) do
+  def loop({partial_chunk, pending}) do
     receive do
       {_type, data} ->
         process_chunk(data, {partial_chunk, pending})
@@ -39,7 +39,7 @@ defmodule OpenFn.LogStream do
     end
   end
 
-  defp process_chunk(data, {partial, pending}) do
+  def process_chunk(data, {partial, pending}) do
     next = pending <> data
 
     Enum.reduce_while(
