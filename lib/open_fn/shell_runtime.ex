@@ -16,8 +16,6 @@ defmodule OpenFn.ShellRuntime do
     cmd: #{command}
     """)
 
-    # TODO: improve error handling and feedback when modules can't be found
-    # TODO: stream stderr & stdout into Collectable - add that to %Result{}
     Rambo.run(
       "/usr/bin/env",
       ["sh", "-c", command],
@@ -34,6 +32,7 @@ defmodule OpenFn.ShellRuntime do
       {msg, %Rambo{} = res} ->
         {msg,
          %Result{
+           exit_reason: msg,
            exit_code: res.status,
            log: !!rambo_opts[:log] || (res.err <> res.out),
            final_state_path: runspec.final_state_path

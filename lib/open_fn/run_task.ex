@@ -130,6 +130,7 @@ defmodule OpenFn.RunTask do
     GenServer.cast(server, {:mark_finished})
   end
 
+  @spec set_result(atom | pid | {atom, any} | {:via, atom, any}, any) :: :ok
   def set_result(server, result) do
     GenServer.cast(server, {:set_result, result})
   end

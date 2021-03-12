@@ -16,7 +16,18 @@ defmodule Engine.TestUtil do
     )
   end
 
-  defp write_temp!(contents) do
+  def timeout_expression(timeout) do
+    ~s[
+      alterState((state) => {
+        console.log("Going on break for #{timeout}...")
+        return new Promise(function(resolve, _reject) {
+          setTimeout(resolve, #{timeout})
+        });
+      })
+    ]
+  end
+
+  def write_temp!(contents) do
     File.write!(path = Temp.path!(), contents)
     path
   end

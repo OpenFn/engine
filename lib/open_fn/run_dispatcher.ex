@@ -21,10 +21,14 @@ defmodule OpenFn.RunDispatcher do
     defstruct @enforce_keys ++ [temp_opts: %{}]
   end
 
+  defmodule GenericHandler do
+    use OpenFn.Run.Handler
+  end
+
   use GenServer
   require Logger
 
-  alias OpenFn.{RunTask, RunSpec, Run, RunBroadcaster}
+  alias OpenFn.{RunSpec, Run, RunBroadcaster, JobStateRepo}
 
   def start_link(%StartOpts{} = opts) do
     GenServer.start_link(__MODULE__, opts, name: opts.name)
@@ -45,24 +49,13 @@ defmodule OpenFn.RunDispatcher do
     run = Run.add_run_spec(run, prepare_runspec(run, state.temp_opts))
 
     OPQ.enqueue(state.queue, fn ->
-      {:ok, pid} =
-        RunTask.start_link(
-          run: run,
-          task_supervisor: state.task_supervisor,
-          job_state_repo: state.job_state_repo
-        )
+      result = GenericHandler.start(run)
 
-      Process.monitor(pid)
-
-      # Intentionally wait or else or we'll dispatch too many Runs
-      # this function should take as long as the command takes.
-      receive do
-        {:run_complete, run} ->
-          RunBroadcaster.process(state.run_broadcaster, run)
-
-        {:DOWN, _ref, :process, ^pid, :normal} ->
-          nil
+      if result.exit_code == 0 do
+        JobStateRepo.register(state.job_state_repo, run.job, run.run_spec.final_state_path)
       end
+
+      RunBroadcaster.process(state.run_broadcaster, run)
     end)
 
     {:reply, :ok, state}
