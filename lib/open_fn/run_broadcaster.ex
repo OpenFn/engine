@@ -105,7 +105,7 @@ defmodule OpenFn.RunBroadcaster do
     runs =
       Config.job_triggers_for(config, job)
       |> Enum.filter(fn {_job, trigger} ->
-        (run.result.exit_code == 0 && trigger.success) || (run.result > 0 && trigger.failure)
+        (run.result.exit_code == 0 && trigger.success) || (run.result.exit_code > 0 && trigger.failure)
       end)
       |> Enum.map(fn {triggered_job, trigger} ->
         # Get the final_state from the Run that triggered this.

@@ -171,6 +171,11 @@ defmodule OpenFn.RunBroadcaster.UnitTest do
       }
     }
 
+    refute_received {
+      :invoke_run,
+      %Run{trigger: ^failure_flow_trigger}
+    }
+
     RunBroadcaster.process(
       :test_run_broadcaster,
       %Run{job: test_job, result: %OpenFn.Result{exit_code: 1}}
