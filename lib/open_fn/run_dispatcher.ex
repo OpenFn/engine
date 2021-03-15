@@ -64,7 +64,6 @@ defmodule OpenFn.RunDispatcher do
     OPQ.enqueue(state.queue, fn ->
       run = Run.mark_started(run)
       result = GenericHandler.start(run.run_spec)
-      IO.inspect(result, label: "OPQ.enqueu")
 
       if result.exit_code == 0 do
         JobStateRepo.register(state.job_state_repo, run.job, run.run_spec.final_state_path)
