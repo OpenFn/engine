@@ -4,8 +4,8 @@ defmodule OpenFn.RunSpec do
   """
   @type t :: %__MODULE__{
           expression_path: String.t(),
-          language_packs_path: String.t(),
-          language_pack: String.t(),
+          adaptors_path: String.t(),
+          adaptor: String.t(),
           state_path: String.t(),
           final_state_path: String.t(),
           test_mode: boolean(),
@@ -17,8 +17,8 @@ defmodule OpenFn.RunSpec do
 
   defstruct [
     :expression_path,
-    :language_packs_path,
-    :language_pack,
+    :adaptors_path,
+    :adaptor,
     :state_path,
     :final_state_path,
     :test_mode,

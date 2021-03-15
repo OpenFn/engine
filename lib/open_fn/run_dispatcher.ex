@@ -100,7 +100,7 @@ defmodule OpenFn.RunDispatcher do
       state_path: state_path,
       final_state_path: final_state_path,
       expression_path: expression_path,
-      language_pack: run.job.language_pack
+      adaptor: run.job.adaptor
     }
   end
 

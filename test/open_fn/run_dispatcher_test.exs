@@ -37,7 +37,7 @@ defmodule OpenFn.RunDispatcher.UnitTest do
     )
 
     run = %Run{
-      job: %OpenFn.Job{name: "test-job", language_pack: "@openfn/language-common"},
+      job: %OpenFn.Job{name: "test-job", adaptor: "@openfn/language-common"},
       initial_state: %{}
     }
 

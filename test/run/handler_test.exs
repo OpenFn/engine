@@ -22,14 +22,14 @@ defmodule OpenFn.Run.Handler.UnitTest do
       job: %OpenFn.Job{name: "test-job"},
       run_spec: %{
         run_spec_fixture()
-        | expression_path: write_temp!(timeout_expression(700))
+        | expression_path: write_temp!(timeout_expression(2000))
       }
     }
 
-    result = MyCustomHandler.start(run.run_spec, context: self(), timeout: 600)
+    result = MyCustomHandler.start(run.run_spec, context: self(), timeout: 1000)
 
     assert result.exit_reason == :killed
-    assert result.log |> List.last() == "Going on break for 700..."
+    assert result.log |> List.last() == "Going on break for 2000..."
   end
 
   @tag timeout: 5_000

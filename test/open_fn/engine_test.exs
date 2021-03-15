@@ -16,7 +16,7 @@ defmodule OpenFn.Engine.UnitTest do
     {:ok, %Result{} = result} =
       OpenFn.Engine.execute_sync(%Message{body: body}, %Job{
         expression: expression,
-        language_pack: "@openfn/language-common"
+        adaptor: "@openfn/language-common"
       })
 
     assert result.exit_code == 0
@@ -31,15 +31,15 @@ defmodule OpenFn.Engine.UnitTest do
     jobs:
       job-1:
         expression: none
-        language_pack: @openfn/language-common
+        adaptor: @openfn/language-common
         trigger: trigger-2
       job-2:
         expression: none
-        language_pack: @openfn/language-common
+        adaptor: @openfn/language-common
         trigger: trigger-3
       job-3:
         expression: none
-        language_pack: @openfn/language-common
+        adaptor: @openfn/language-common
         trigger: trigger-3
 
     triggers:
@@ -63,7 +63,7 @@ defmodule OpenFn.Engine.UnitTest do
     jobs:
       job-3:
         expression: none
-        language_pack: @openfn/language-common
+        adaptor: @openfn/language-common
         trigger: trigger-2
 
     triggers:
@@ -83,7 +83,7 @@ defmodule OpenFn.Engine.UnitTest do
     jobs:
       job-3:
         expression: none
-        language_pack: @openfn/language-common
+        adaptor: @openfn/language-common
         trigger: trigger-2
     """
 

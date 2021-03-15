@@ -3,7 +3,7 @@ defmodule OpenFn.Job do
     :name,
     :expression,
     :credential,
-    :language_pack,
+    :adaptor,
     :trigger
   ]
 

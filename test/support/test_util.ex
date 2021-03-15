@@ -10,7 +10,7 @@ defmodule Engine.TestUtil do
       Enum.into(opts, %{
         expression_path: write_temp!(~s[alterState((state) => state)]),
         state_path: write_temp!(~s[{"foo": "bar"}]),
-        language_pack: "@openfn/language-common",
+        adaptor: "@openfn/language-common",
         final_state_path: Temp.path!()
       })
     )

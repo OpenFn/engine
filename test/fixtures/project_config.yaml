@@ -5,11 +5,11 @@ jobs:
         console.log("Hi there!")
         return state;
       })
-    language_pack: "@openfn/language-common"
+    adaptor: "@openfn/language-common"
     trigger: trigger-2
   job-2:
     expression: none
-    language_pack: "@openfn/language-common"
+    adaptor: "@openfn/language-common"
     trigger: trigger-3
   job-3:
     expression: >
@@ -17,7 +17,7 @@ jobs:
         console.log("Hi there!")
         return state;
       })
-    language_pack: "@openfn/language-common"
+    adaptor: "@openfn/language-common"
     trigger: trigger-4
 
 triggers:

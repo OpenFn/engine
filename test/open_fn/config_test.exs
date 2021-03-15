@@ -14,24 +14,24 @@ defmodule OpenFn.ConfigTest do
       jobs:
         job-1:
           expression: none
-          language_pack: language-common
+          adaptor: language-common
           trigger: trigger-2
         job-2:
           credential: my-secret-credential
           expression: none
-          language_pack: language-common
+          adaptor: language-common
           trigger: trigger-3
         job-3:
           expression: none
-          language_pack: language-common
+          adaptor: language-common
           trigger: trigger-3
         job-4:
           expression: none
-          language_pack: language-common
+          adaptor: language-common
           trigger: after-job-2-success
         job-5:
           expression: none
-          language_pack: language-common
+          adaptor: language-common
           trigger: after-job-2-failure
 
       triggers:

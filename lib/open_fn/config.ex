@@ -18,7 +18,7 @@ defmodule OpenFn.Config do
           console.log("Hi there!")
           return state;
         })
-      language_pack: '@openfn/language-common'
+      adaptor: '@openfn/language-common'
       trigger: trigger-one
 
   triggers:
@@ -39,7 +39,7 @@ defmodule OpenFn.Config do
 
   A string representing the JS expression that gets executed.
 
-  **language_pack**
+  **adaptor**
 
   The module to be used when executing the job. The module parameter is expected
   to be compatible with NodeJS' `require` schemantics.
@@ -165,7 +165,7 @@ defmodule OpenFn.Config do
           name: name,
           credential: Map.get(job_opts, "credential"),
           trigger: Map.get(job_opts, "trigger"),
-          language_pack: Map.get(job_opts, "language_pack"),
+          adaptor: Map.get(job_opts, "adaptor"),
           expression: Map.get(job_opts, "expression")
         }
       end

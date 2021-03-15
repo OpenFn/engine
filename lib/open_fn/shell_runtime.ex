@@ -52,7 +52,7 @@ defmodule OpenFn.ShellRuntime do
     ~s"""
       (cd $NODE_PATH && ./.bin/core execute \
       -e #{runspec.expression_path} \
-      -l #{runspec.language_pack} \
+      -l #{runspec.adaptor} \
       -s #{runspec.state_path} \
       #{(runspec.final_state_path && "-o #{runspec.final_state_path} ") || ""}
       #{(test_mode && "--test ") || ""}
