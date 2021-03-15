@@ -4,6 +4,7 @@ defmodule OpenFn.Engine.UnitTest do
 
   alias OpenFn.{Message, Job, Result, Config, Engine}
 
+  @tag skip: true
   test "execute_sync/2" do
     body = Jason.decode!(~s({"a": 1}))
 

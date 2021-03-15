@@ -75,6 +75,7 @@ defmodule OpenFn.Engine.Supervisor do
       task_supervisor: :task_supervisor,
       job_state_repo: config[:job_state_repo_name],
       run_broadcaster: config[:run_broadcaster_name],
+      adaptors_path: config[:adaptors_path],
       temp_opts: %{basedir: "./tmp"}
     }
 

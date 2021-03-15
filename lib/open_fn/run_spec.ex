@@ -12,16 +12,14 @@ defmodule OpenFn.RunSpec do
           no_console: boolean()
         }
 
-  # @enforce_keys [:run, :task_supervisor, :job_state_repo]
-  # defstruct @enforce_keys ++ [ref: nil, parent: nil]
-
-  defstruct [
-    :expression_path,
-    :adaptors_path,
-    :adaptor,
-    :state_path,
-    :final_state_path,
-    :test_mode,
-    :no_console
-  ]
+  @enforce_keys [:adaptor]
+  defstruct @enforce_keys ++
+              [
+                :expression_path,
+                :adaptors_path,
+                :state_path,
+                :final_state_path,
+                :test_mode,
+                :no_console
+              ]
 end

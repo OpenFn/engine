@@ -40,7 +40,10 @@ defmodule OpenFn.Run.Handler do
 
         rambo_opts =
           Keyword.take(opts, [:timeout])
-          |> Keyword.merge(log: &log_callback(log_agent, context, &1))
+          |> Keyword.merge(
+            log: &log_callback(log_agent, context, &1),
+            env: %{"NODE_PATH" => run_spec.adaptors_path}
+          )
 
         run_task =
           Task.Supervisor.async_nolink(task_supervisor, fn ->

@@ -5,7 +5,7 @@ defmodule OpenFn.ShellRuntimeTest do
 
   @tag skip: true
   test "works" do
-    {:ok, %Rambo{}} = OpenFn.ShellRuntime.run(%RunSpec{})
+    {:ok, %Rambo{}} = OpenFn.ShellRuntime.run(%RunSpec{adaptors_path: "./", adaptor: ""})
   end
 
   test "when used with LogStream" do

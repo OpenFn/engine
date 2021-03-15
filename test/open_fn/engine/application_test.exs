@@ -4,6 +4,7 @@ defmodule TestApp do
   use OpenFn.Engine.Application,
     project_config: fixture(:project_config, :yaml),
     job_state_basedir: Temp.path!(),
+    adaptors_path: "./priv/openfn/runtime/node_modules",
     otp_app: :engine
 end
 

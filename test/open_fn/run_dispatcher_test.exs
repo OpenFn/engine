@@ -32,6 +32,7 @@ defmodule OpenFn.RunDispatcher.UnitTest do
          queue: queue,
          task_supervisor: :task_supervisor,
          job_state_repo: job_state_repo_name,
+         adaptors_path: "priv/openfn/runtime/node_modules",
          run_broadcaster: run_broadcaster
        }}
     )

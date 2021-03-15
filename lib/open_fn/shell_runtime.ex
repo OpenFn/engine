@@ -5,28 +5,24 @@ defmodule OpenFn.ShellRuntime do
   def run(%RunSpec{} = runspec, rambo_opts \\ []) do
     command = build_command(runspec)
 
-    env = %{
-      "NODE_PATH" => "priv/openfn/runtime/node_modules"
-      # "NODE_ENV" => Application.get_env(:open_fn, :node_js_env),
-      # "PATH" => "..."
-    }
+    rambo_opts = Keyword.merge(
+      [
+        env: %{},
+        timeout: nil,
+        log: false
+      ],
+      rambo_opts
+    )
 
     Logger.debug("""
-    env: #{Enum.map(env, fn {k, v} -> "#{k}=#{v}" end)}
+    env: #{Enum.map(rambo_opts[:env], fn {k, v} -> "#{k}=#{v}" end)}
     cmd: #{command}
     """)
 
     Rambo.run(
       "/usr/bin/env",
       ["sh", "-c", command],
-      Keyword.merge(
-        [
-          env: env,
-          timeout: nil,
-          log: false
-        ],
-        rambo_opts
-      )
+      rambo_opts
     )
     |> case do
       {msg, %Rambo{} = res} ->
@@ -34,7 +30,7 @@ defmodule OpenFn.ShellRuntime do
          %Result{
            exit_reason: msg,
            exit_code: res.status,
-           log: !!rambo_opts[:log] || (res.err <> res.out),
+           log: !!rambo_opts[:log] || res.err <> res.out,
            final_state_path: runspec.final_state_path
          }}
 

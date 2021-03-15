@@ -14,10 +14,18 @@ defmodule OpenFn.RunDispatcher do
             task_supervisor: GenServer.name(),
             job_state_repo: GenServer.name(),
             run_broadcaster: GenServer.name(),
+            adaptors_path: String.t(),
             temp_opts: Map.t()
           }
 
-    @enforce_keys [:name, :queue, :task_supervisor, :job_state_repo, :run_broadcaster]
+    @enforce_keys [
+      :adaptors_path,
+      :job_state_repo,
+      :name,
+      :queue,
+      :run_broadcaster,
+      :task_supervisor
+    ]
     defstruct @enforce_keys ++ [temp_opts: %{}]
   end
 
@@ -44,13 +52,19 @@ defmodule OpenFn.RunDispatcher do
   end
 
   def handle_call({:invoke_run, run}, _from, state) do
-    Logger.debug("RunDispatcher.invoke_run")
-
-    run = Run.add_run_spec(run, prepare_runspec(run, state.temp_opts))
+    run =
+      Run.add_run_spec(
+        run,
+        prepare_runspec(
+          run,
+          %{temp_opts: state.temp_opts, adaptors_path: state.adaptors_path}
+        )
+      )
 
     OPQ.enqueue(state.queue, fn ->
       run = Run.mark_started(run)
       result = GenericHandler.start(run.run_spec)
+      IO.inspect(result, label: "OPQ.enqueu")
 
       if result.exit_code == 0 do
         JobStateRepo.register(state.job_state_repo, run.job, run.run_spec.final_state_path)
@@ -77,7 +91,7 @@ defmodule OpenFn.RunDispatcher do
     Path.absname(path)
   end
 
-  defp prepare_runspec(%Run{} = run, temp_opts) do
+  defp prepare_runspec(%Run{} = run, %{temp_opts: temp_opts, adaptors_path: adaptors_path}) do
     # TODO: set base_dir option to save the files to somewhere in the project
     final_state_path = generate_path("final_state.json", temp_opts)
     expression_path = generate_path("expression.js", temp_opts)
@@ -100,6 +114,7 @@ defmodule OpenFn.RunDispatcher do
       state_path: state_path,
       final_state_path: final_state_path,
       expression_path: expression_path,
+      adaptors_path: adaptors_path,
       adaptor: run.job.adaptor
     }
   end
