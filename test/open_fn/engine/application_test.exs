@@ -9,7 +9,9 @@ defmodule TestApp do
 end
 
 defmodule AppConfigured do
-  use OpenFn.Engine.Application, otp_app: :openfn_engine
+  use OpenFn.Engine.Application,
+    otp_app: :openfn_engine,
+    adaptors_path: "./priv/openfn/runtime/node_modules"
 end
 
 defmodule OpenFn.Engine.Application.UnitTest do
