@@ -1,4 +1,4 @@
-# OpenFn.Engine [![CircleCI](https://circleci.com/gh/OpenFn/engine.svg?style=svg)](https://circleci.com/gh/OpenFn/engine)
+# Engine [![CircleCI](https://circleci.com/gh/OpenFn/engine.svg?style=svg)](https://circleci.com/gh/OpenFn/engine)
 
 A processing framework for executing jobs using the OpenFn ecosystem of 
 language packs.
@@ -11,7 +11,7 @@ by adding `openfn_engine` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:openfn_engine, "~> 0.1.0"}
+    {:engine, "~> 0.1.0"}
   ]
 end
 ```

@@ -1,4 +1,4 @@
-defmodule OpenFn.Engine.MixProject do
+defmodule Engine.MixProject do
   use Mix.Project
 
   @version "0.2.0"
@@ -6,7 +6,7 @@ defmodule OpenFn.Engine.MixProject do
 
   def project do
     [
-      app: :openfn_engine,
+      app: :engine,
       version: @version,
       elixir: "~> 1.10",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -14,7 +14,7 @@ defmodule OpenFn.Engine.MixProject do
       deps: deps(),
 
       # Docs
-      name: "OpenFn.Engine",
+      name: "Engine",
       source_url: @source_url,
       # homepage_url: "http://YOUR_PROJECT_HOMEPAGE",
       docs: docs(),
@@ -32,7 +32,7 @@ defmodule OpenFn.Engine.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {OpenFn.Engine, []}
+      mod: {Engine, []}
     ]
   end
 
@@ -54,8 +54,6 @@ defmodule OpenFn.Engine.MixProject do
       {:yaml_elixir, "~> 2.5"},
       {:junit_formatter, "~> 3.0", only: [:test]},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false}
-      # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]
   end
 

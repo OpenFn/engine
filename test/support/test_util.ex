@@ -5,7 +5,7 @@ defmodule Engine.TestUtil do
   end
 
   def run_spec_fixture(opts \\ []) do
-    OpenFn.RunSpec
+    Engine.RunSpec
     |> struct!(
       Enum.into(opts, %{
         expression_path: write_temp!(~s[alterState((state) => state)]),
@@ -38,9 +38,9 @@ defmodule Engine.TestUtil do
   def has_ok_results(runs) do
     assert length(runs) > 0
 
-    assert Enum.all?(runs, fn %OpenFn.Run{result: result} ->
+    assert Enum.all?(runs, fn %Engine.Run{result: result} ->
              case result do
-               %OpenFn.Result{} = result ->
+               %Engine.Result{} = result ->
                  result.exit_code == 0
 
                _ ->

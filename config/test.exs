@@ -1,6 +1,6 @@
 import Config
 
-config :openfn_engine,
+config :engine,
        AppConfigured,
        project_config: "file://test/fixtures/project_config.yaml",
        name: Engine
