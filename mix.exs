@@ -49,7 +49,7 @@ defmodule Engine.MixProject do
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:opq, github: "fredwu/opq", ref: "08406f5"},
       {:quantum, "~> 3.3.0"},
-      {:rambo, "~> 0.3.3"},
+      {:rambo, "~> 0.3.4"},
       {:temp, "~> 0.4"},
       {:yaml_elixir, "~> 2.5"},
       {:junit_formatter, "~> 3.0", only: [:test]},
