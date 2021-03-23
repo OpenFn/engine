@@ -15,7 +15,8 @@ defmodule Engine.RunDispatcher do
             job_state_repo: GenServer.name(),
             run_broadcaster: GenServer.name(),
             adaptors_path: String.t(),
-            temp_opts: Map.t()
+            temp_opts: Map.t(),
+            handler_env: Map.t()
           }
 
     @enforce_keys [
@@ -26,7 +27,7 @@ defmodule Engine.RunDispatcher do
       :run_broadcaster,
       :task_supervisor
     ]
-    defstruct @enforce_keys ++ [temp_opts: %{}]
+    defstruct @enforce_keys ++ [temp_opts: %{}, handler_env: %{}]
   end
 
   defmodule GenericHandler do
@@ -42,13 +43,14 @@ defmodule Engine.RunDispatcher do
     GenServer.start_link(__MODULE__, opts, name: opts.name)
   end
 
-  @spec init(any) :: {:ok, any}
-  def init(opts) do
+  @spec init(StartOpts.t()) :: {:ok, any}
+  def init(%StartOpts{} = opts) do
     if basedir = Map.get(opts.temp_opts, :basedir) do
       File.mkdir_p!(basedir)
     end
 
-    {:ok, opts}
+    {:ok,
+     %{opts | handler_env: %{"PATH" => "#{opts.adaptors_path}/.bin:#{System.get_env("PATH")}"}}}
   end
 
   def handle_call({:invoke_run, run}, _from, state) do
@@ -63,7 +65,11 @@ defmodule Engine.RunDispatcher do
 
     OPQ.enqueue(state.queue, fn ->
       run = Run.mark_started(run)
-      result = GenericHandler.start(run.run_spec)
+
+      result =
+        GenericHandler.start(run.run_spec,
+          env: state.handler_env
+        )
 
       if result.exit_code == 0 do
         JobStateRepo.register(state.job_state_repo, run.job, run.run_spec.final_state_path)

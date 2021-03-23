@@ -8,7 +8,6 @@ defmodule Engine.ShellRuntime do
     rambo_opts =
       Keyword.merge(
         [
-          env: %{},
           timeout: nil,
           log: false
         ],
@@ -16,7 +15,7 @@ defmodule Engine.ShellRuntime do
       )
 
     Logger.debug("""
-    env: #{Enum.map(rambo_opts[:env], fn {k, v} -> "#{k}=#{v}" end)}
+    env: #{Enum.map(rambo_opts[:env], fn {k, v} -> "#{k}=#{v}" end) |> Enum.join(" ")}
     cmd: #{command}
     """)
 
@@ -47,14 +46,13 @@ defmodule Engine.ShellRuntime do
     # TODO: build this string up using a list of lists and joining with \
     #       i.e. [[flag, value], [flag]] |> String.join(" \\\n")
     ~s"""
-      (cd $NODE_PATH && ./.bin/core execute \
+      core execute \
       -e #{runspec.expression_path} \
       -l #{runspec.adaptor} \
       -s #{runspec.state_path} \
       #{(runspec.final_state_path && "-o #{runspec.final_state_path} ") || ""}
       #{(test_mode && "--test ") || ""}
       #{(no_console && "--noConsole") || ""}
-      )
     """
   end
 end

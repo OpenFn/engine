@@ -26,7 +26,12 @@ defmodule Engine.Run.Handler.UnitTest do
       }
     }
 
-    result = MyCustomHandler.start(run.run_spec, context: self(), timeout: 1000)
+    result =
+      MyCustomHandler.start(run.run_spec,
+        context: self(),
+        timeout: 1000,
+        env: %{"PATH" => "./priv/openfn/runtime/node_modules/.bin:#{System.get_env("PATH")}"}
+      )
 
     assert result.exit_reason == :killed
     assert result.log |> List.last() == "Going on break for 2000..."
@@ -39,7 +44,13 @@ defmodule Engine.Run.Handler.UnitTest do
       run_spec: run_spec_fixture()
     }
 
-    result = MyCustomHandler.start(run.run_spec, context: self())
+    result =
+      MyCustomHandler.start(run.run_spec,
+        env: %{"PATH" => "./priv/openfn/runtime/node_modules/.bin:#{System.get_env("PATH")}"},
+        context: self()
+      )
+
+    IO.inspect(result)
     assert result.exit_reason == :ok
 
     assert_received(:yepper)

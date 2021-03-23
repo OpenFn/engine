@@ -24,8 +24,8 @@ defmodule Engine.Run.Handler do
   end
 
   @doc false
-  defmacro __using__(opts) do
-    quote bind_quoted: [opts: opts] do
+  defmacro __using__(_opts) do
+    quote location: :keep do
       alias Engine.Run.Handler
       @behaviour Handler
 
@@ -42,7 +42,7 @@ defmodule Engine.Run.Handler do
           Keyword.take(opts, [:timeout])
           |> Keyword.merge(
             log: &log_callback(log_agent, context, &1),
-            env: %{"NODE_PATH" => run_spec.adaptors_path}
+            env: env(run_spec, opts)
           )
 
         run_task =
@@ -114,6 +114,7 @@ defmodule Engine.Run.Handler do
         DynamicSupervisor.stop(agent_supervisor)
       end
 
+      defdelegate env(run_spec, opts), to: Handler
       defdelegate on_start(context), to: Handler
       defdelegate on_log_line(line, context), to: Handler
       defdelegate on_finish(context), to: Handler
@@ -138,4 +139,11 @@ defmodule Engine.Run.Handler do
   def on_start(_context), do: :noop
   def on_log_line(_line, _context), do: :noop
   def on_finish(_context), do: :noop
+
+  @callback env(run_spec :: %RunSpec{}, opts :: []) :: %{binary() => binary()}
+
+  def env(run_spec, opts) do
+    %{"NODE_PATH" => run_spec.adaptors_path}
+    |> Map.merge(Keyword.get(opts, :env, %{}))
+  end
 end
