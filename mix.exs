@@ -42,18 +42,19 @@ defmodule Engine.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:ex_doc, "~> 0.22", only: :dev, runtime: false},
       {:excoveralls, "~> 0.11.2", only: [:test]},
       {:exjsonpath, "~> 0.1"},
       {:jason, "~> 1.2"},
+      {:junit_formatter, "~> 3.0", only: [:test]},
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:opq, github: "fredwu/opq", ref: "08406f5"},
       {:quantum, "~> 3.3.0"},
       {:rambo, "~> 0.3.4"},
       {:temp, "~> 0.4"},
-      {:yaml_elixir, "~> 2.5"},
-      {:junit_formatter, "~> 3.0", only: [:test]},
-      {:credo, "~> 1.5", only: [:dev, :test], runtime: false}
+      {:yaml_elixir, "~> 2.5"}
     ]
   end
 
