@@ -1,17 +1,28 @@
 defmodule Engine.LogAgent do
-  use Agent
+  @type logline :: {timestamp :: integer(), type :: :stdout | :stderr, line :: binary()}
 
-  def start_link(_ \\ []) do
-    Agent.start_link(fn -> {{[], []}, {"", ""}} end)
-  end
+  defmodule LogState do
+    @typep line_state :: {[binary()], [binary()]}
+    @typep chunk_state :: {bitstring(), bitstring()}
 
-  def lines(agent) do
-    Agent.get(agent, fn {{_, lines}, {_, _}} -> lines end)
-  end
+    @type t :: {
+            line_state :: line_state(),
+            chunk_state :: chunk_state()
+          }
 
-  def process_chunk(agent, {_type, data}) when is_pid(agent) do
-    agent
-    |> Agent.get_and_update(fn {line_state, chunk_state} ->
+    @spec new() :: t()
+    def new() do
+      {{[], []}, {"", ""}}
+    end
+
+    @spec lines(state :: LogState.t()) :: [binary()]
+    def lines({{_, lines}, _}), do: lines
+
+    @spec pending(state :: LogState.t()) :: [binary()]
+    def pending({{pending, _}, _}), do: pending
+
+    @spec process_chunk(data :: any(), state :: LogState.t()) :: {[binary()], LogState.t()}
+    def process_chunk(data, {line_state, chunk_state}) do
       reduce_chunk(data, chunk_state)
       |> case do
         {nil, partial_chunk, pending} ->
@@ -26,27 +37,47 @@ defmodule Engine.LogAgent do
 
           {line, {{pending, lines ++ line}, {"", pending_chunks}}}
       end
-    end)
+    end
+
+    @spec reduce_chunk(data :: any(), chunk_state :: chunk_state()) ::
+            {binary() | nil, binary(), binary()}
+    def reduce_chunk(data, {partial, pending}) do
+      next = pending <> data
+
+      Enum.reduce_while(
+        0..byte_size(next),
+        {partial, String.next_grapheme(next)},
+        fn _, {chunk, grapheme_result} ->
+          case grapheme_result do
+            {<<_::utf8>> = next_char, rest} ->
+              {:cont, {chunk <> IO.iodata_to_binary(next_char), String.next_grapheme(rest)}}
+
+            {next_char, rest} ->
+              {:halt, {nil, chunk, next_char <> rest}}
+
+            nil ->
+              {:halt, {chunk, "", ""}}
+          end
+        end
+      )
+    end
   end
 
-  def reduce_chunk(data, {partial, pending}) do
-    next = pending <> data
+  use Agent
 
-    Enum.reduce_while(
-      0..byte_size(next),
-      {partial, String.next_grapheme(next)},
-      fn _, {chunk, grapheme_result} ->
-        case grapheme_result do
-          {<<_::utf8>> = next_char, rest} ->
-            {:cont, {chunk <> IO.iodata_to_binary(next_char), String.next_grapheme(rest)}}
+  def start_link(_ \\ []) do
+    Agent.start_link(&LogState.new/0)
+  end
 
-          {next_char, rest} ->
-            {:halt, {nil, chunk, next_char <> rest}}
+  def lines(agent) do
+    Agent.get(agent, &LogState.lines/1)
+  end
 
-          nil ->
-            {:halt, {chunk, "", ""}}
-        end
-      end
-    )
+  def pending(agent) do
+    Agent.get(agent, &LogState.pending/1)
+  end
+
+  def process_chunk(agent, {_type, data}) when is_pid(agent) do
+    agent |> Agent.get_and_update(&LogState.process_chunk(data, &1))
   end
 end
