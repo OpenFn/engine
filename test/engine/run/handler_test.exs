@@ -6,7 +6,7 @@ defmodule MyCustomHandler do
   use Engine.Run.Handler
 
   @impl Handler
-  def on_finish(ctx) do
+  def on_finish(_result, ctx) do
     send(ctx, :yepper)
   end
 end
@@ -50,7 +50,6 @@ defmodule Engine.Run.Handler.UnitTest do
         context: self()
       )
 
-    IO.inspect(result)
     assert result.exit_reason == :ok
 
     assert_received(:yepper)

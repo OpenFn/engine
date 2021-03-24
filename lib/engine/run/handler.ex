@@ -51,8 +51,6 @@ defmodule Engine.Run.Handler do
 
             {_msg, result} = Engine.ShellRuntime.run(run_spec, rambo_opts)
 
-            __MODULE__.on_finish(context)
-
             result
           end)
 
@@ -83,7 +81,7 @@ defmodule Engine.Run.Handler do
         receive do
           # RunTask finished
           {^run_task_ref, result} ->
-            __MODULE__.on_finish(state.context)
+            __MODULE__.on_finish(result, state.context)
             # We don't care about the DOWN message now, so let's demonitor and flush it
             Process.demonitor(run_task_ref, [:flush])
             Process.demonitor(log_agent_ref, [:flush])
@@ -117,7 +115,7 @@ defmodule Engine.Run.Handler do
       defdelegate env(run_spec, opts), to: Handler
       defdelegate on_start(context), to: Handler
       defdelegate on_log_line(line, context), to: Handler
-      defdelegate on_finish(context), to: Handler
+      defdelegate on_finish(result, context), to: Handler
 
       defoverridable Handler
     end
@@ -133,12 +131,12 @@ defmodule Engine.Run.Handler do
   """
   @callback on_start(context :: any()) :: any
   @callback on_log_line(line :: list(binary()), context :: any()) :: any
-  @callback on_finish(context :: any()) :: any
+  @callback on_finish(result :: Engine.Result.t(), context :: any()) :: any
   @callback log_callback(agent :: pid(), context :: any(), args :: any()) :: false
 
   def on_start(_context), do: :noop
   def on_log_line(_line, _context), do: :noop
-  def on_finish(_context), do: :noop
+  def on_finish(_result, _context), do: :noop
 
   @callback env(run_spec :: %RunSpec{}, opts :: []) :: %{binary() => binary()}
 
