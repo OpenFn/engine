@@ -2,17 +2,17 @@ defmodule Engine.ShellRuntime do
   alias Engine.{RunSpec, Result}
   require Logger
 
-  def run(%RunSpec{} = runspec, rambo_opts \\ []) do
+  def run(%RunSpec{} = runspec, opts \\ []) do
     command = build_command(runspec)
+    IO.inspect(runspec, pretty: true, label: "runspec")
+    env = build_env(runspec, opts[:env])
 
     rambo_opts =
       Keyword.merge(
-        [
-          timeout: nil,
-          log: false
-        ],
-        rambo_opts
+        [timeout: nil, log: false],
+        opts |> Keyword.take([:timeout, :log])
       )
+      |> Keyword.put(:env, env)
 
     Logger.debug("""
     env: #{Enum.map(rambo_opts[:env], fn {k, v} -> "#{k}=#{v}" end) |> Enum.join(" ")}
@@ -40,19 +40,21 @@ defmodule Engine.ShellRuntime do
   end
 
   def build_command(%RunSpec{} = runspec) do
-    test_mode = nil
-    no_console = nil
-
-    # TODO: build this string up using a list of lists and joining with \
-    #       i.e. [[flag, value], [flag]] |> String.join(" \\\n")
     ~s"""
       core execute \
       -e #{runspec.expression_path} \
       -l #{runspec.adaptor} \
       -s #{runspec.state_path} \
       #{(runspec.final_state_path && "-o #{runspec.final_state_path} ") || ""}
-      #{(test_mode && "--test ") || ""}
-      #{(no_console && "--noConsole") || ""}
+      #{(runspec.test_mode && "--test ") || ""}
+      #{(runspec.no_console && "--noConsole") || ""}
     """
   end
+
+  def build_env(%RunSpec{memory_limit: memory_limit}, env) when not is_nil(memory_limit) do
+    %{"NODE_OPTIONS" => "--max-old-space-size=#{memory_limit}"}
+    |> Map.merge(env || %{})
+  end
+
+  def build_env(_runspec, env), do: env
 end

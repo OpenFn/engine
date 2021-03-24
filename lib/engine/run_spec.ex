@@ -9,17 +9,19 @@ defmodule Engine.RunSpec do
           state_path: String.t(),
           final_state_path: String.t(),
           test_mode: boolean(),
-          no_console: boolean()
+          no_console: boolean(),
+          memory_limit: nil | integer()
         }
 
   @enforce_keys [:adaptor]
   defstruct @enforce_keys ++
               [
-                :expression_path,
-                :adaptors_path,
-                :state_path,
-                :final_state_path,
-                :test_mode,
-                :no_console
+                adaptors_path: nil,
+                expression_path: nil,
+                final_state_path: nil,
+                memory_limit: nil,
+                no_console: false,
+                state_path: nil,
+                test_mode: false,
               ]
 end
