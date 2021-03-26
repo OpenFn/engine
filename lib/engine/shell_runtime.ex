@@ -4,7 +4,7 @@ defmodule Engine.ShellRuntime do
 
   def run(%RunSpec{} = runspec, opts \\ []) do
     command = build_command(runspec)
-    IO.inspect(runspec, pretty: true, label: "runspec")
+    Logger.debug("ShellRuntime.run/2 called with #{inspect(runspec)}")
     env = build_env(runspec, opts[:env])
 
     rambo_opts =
