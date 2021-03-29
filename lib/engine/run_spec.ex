@@ -10,7 +10,9 @@ defmodule Engine.RunSpec do
           final_state_path: String.t(),
           test_mode: boolean(),
           no_console: boolean(),
-          memory_limit: nil | integer()
+          memory_limit: nil | integer(),
+          env: nil | %{binary() => binary()},
+          timeout: nil | integer()
         }
 
   @enforce_keys [:adaptor]
@@ -23,5 +25,7 @@ defmodule Engine.RunSpec do
                 no_console: false,
                 state_path: nil,
                 test_mode: false,
+                env: nil,
+                timeout: nil
               ]
 end

@@ -54,4 +54,24 @@ defmodule Engine.Run.Handler.UnitTest do
 
     assert_received(:yepper)
   end
+
+  @tag timeout: 5_000
+  test "calls uses the env from a RunSpec" do
+    run = %Run{
+      job: %Engine.Job{name: "test-job"},
+      run_spec:
+        run_spec_fixture(
+          env: %{"PATH" => "./priv/openfn/runtime/node_modules/.bin:#{System.get_env("PATH")}"}
+        )
+    }
+
+    result =
+      MyCustomHandler.start(run.run_spec,
+        context: self()
+      )
+
+    assert result.exit_reason == :ok
+
+    assert_received(:yepper)
+  end
 end

@@ -38,12 +38,11 @@ defmodule Engine.Run.Handler do
 
         context = opts[:context] || nil
 
-        rambo_opts =
-          Keyword.take(opts, [:timeout])
-          |> Keyword.merge(
-            log: &log_callback(log_agent, context, &1),
-            env: env(run_spec, opts)
-          )
+        rambo_opts = [
+          timeout: opts[:timeout] || run_spec.timeout,
+          log: &log_callback(log_agent, context, &1),
+          env: env(run_spec, opts)
+        ]
 
         run_task =
           Task.Supervisor.async_nolink(task_supervisor, fn ->
@@ -143,5 +142,6 @@ defmodule Engine.Run.Handler do
   def env(run_spec, opts) do
     %{"NODE_PATH" => run_spec.adaptors_path}
     |> Map.merge(Keyword.get(opts, :env, %{}))
+    |> Map.merge(run_spec.env || %{})
   end
 end
