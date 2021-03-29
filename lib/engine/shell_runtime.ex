@@ -32,7 +32,7 @@ defmodule Engine.ShellRuntime do
          %Result{
            exit_reason: msg,
            exit_code: res.status,
-           log: String.split(res.err <> res.out, "\n"),
+           log: String.split(res.out <> res.err, "\n"),
            final_state_path: runspec.final_state_path
          }}
 
