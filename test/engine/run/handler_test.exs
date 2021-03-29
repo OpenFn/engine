@@ -34,7 +34,7 @@ defmodule Engine.Run.Handler.UnitTest do
       )
 
     assert result.exit_reason == :killed
-    assert result.log |> List.last() == "Going on break for 2000..."
+    assert result.log |> Enum.at(-2) == "Going on break for 2000..."
   end
 
   @tag timeout: 5_000

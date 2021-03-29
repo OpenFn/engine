@@ -68,7 +68,7 @@ defmodule Engine.Run.Handler do
         Engine.LogAgent.process_chunk(log_agent, args)
         |> Enum.each(&__MODULE__.on_log_line(&1, context))
 
-        false
+        true
       end
 
       defp wait(
@@ -84,9 +84,8 @@ defmodule Engine.Run.Handler do
             # We don't care about the DOWN message now, so let's demonitor and flush it
             Process.demonitor(run_task_ref, [:flush])
             Process.demonitor(log_agent_ref, [:flush])
-            log = Engine.LogAgent.lines(state.log_agent)
             stop(state)
-            %{result | log: log}
+            result
 
           {:DOWN, ^run_task_ref, :process, _pid, _exp} ->
             stop(state)

@@ -38,7 +38,7 @@ defmodule Engine.ShellRuntimeTest do
     assert result.exit_code == 134
     assert result.exit_reason == :error
 
-    assert String.contains?(result.log, "heap out of memory")
+    assert String.contains?(Enum.join(result.log, "\n"), "heap out of memory")
 
   end
 end
