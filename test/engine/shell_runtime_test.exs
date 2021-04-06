@@ -33,12 +33,14 @@ defmodule Engine.ShellRuntimeTest do
   test "allows a memory limit to be set" do
     run_spec = run_spec_fixture(memory_limit: "1")
 
-    assert {:error, result} = Engine.ShellRuntime.run(run_spec, env: %{"PATH" => "#{run_spec.adaptors_path}/.bin:#{System.get_env("PATH")}"})
+    assert {:error, result} =
+             Engine.ShellRuntime.run(run_spec,
+               env: %{"PATH" => "#{run_spec.adaptors_path}/.bin:#{System.get_env("PATH")}"}
+             )
 
     assert result.exit_code == 134
     assert result.exit_reason == :error
 
     assert String.contains?(Enum.join(result.log, "\n"), "heap out of memory")
-
   end
 end

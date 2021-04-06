@@ -2,45 +2,39 @@ defmodule Engine.LogAgent do
   @type logline :: {timestamp :: integer(), type :: :stdout | :stderr, line :: binary()}
 
   defmodule LogState do
-    @typep line_state :: {[binary()], [binary()]}
+    @typep buffer :: [binary()]
     @typep chunk_state :: {bitstring(), bitstring()}
 
     @type t :: {
-            line_state :: line_state(),
+            buffer :: buffer(),
             chunk_state :: chunk_state()
           }
 
     @spec new() :: t()
     def new() do
-      {{[], []}, {"", ""}}
+      {[], {"", ""}}
     end
 
-    @spec lines(state :: LogState.t()) :: [binary()]
-    def lines({{_, lines}, _}), do: lines
+    @spec buffer(state :: LogState.t()) :: [binary()]
+    def buffer({buffer, _}), do: buffer
 
-    @spec pending(state :: LogState.t()) :: [binary()]
-    def pending({{pending, _}, _}), do: pending
+    # @spec pending(state :: LogState.t()) :: [binary()]
+    # def pending({{pending, _}, _}), do: pending
 
-    @spec process_chunk(data :: any(), state :: LogState.t()) :: {[binary()], LogState.t()}
-    def process_chunk(data, {line_state, chunk_state}) do
+    @spec process_chunk(data :: any(), state :: LogState.t()) :: {binary() | nil, LogState.t()}
+    def process_chunk(data, {buffer, chunk_state}) do
       reduce_chunk(data, chunk_state)
       |> case do
-        {nil, partial_chunk, pending} ->
-          {[], {line_state, {partial_chunk, pending}}}
+        {nil, chunk_state} ->
+          {nil, {buffer, chunk_state}}
 
-        {chunk, "", pending_chunks} ->
-          {pending, lines} = line_state
-
-          {line, pending} =
-            String.split(Enum.join(pending) <> chunk, "\n")
-            |> Enum.split(-1)
-
-          {line, {{pending, lines ++ line}, {"", pending_chunks}}}
+        {chunk, {"", pending_chunks}} ->
+          {chunk, {buffer ++ [chunk], {"", pending_chunks}}}
       end
     end
 
     @spec reduce_chunk(data :: any(), chunk_state :: chunk_state()) ::
-            {binary() | nil, binary(), binary()}
+            {binary() | nil, chunk_state()}
     def reduce_chunk(data, {partial, pending}) do
       next = pending <> data
 
@@ -49,17 +43,23 @@ defmodule Engine.LogAgent do
         {partial, String.next_grapheme(next)},
         fn _, {chunk, grapheme_result} ->
           case grapheme_result do
-            {<<_::utf8>> = next_char, rest} ->
-              {:cont, {chunk <> IO.iodata_to_binary(next_char), String.next_grapheme(rest)}}
-
+            # char is utf-8
             {next_char, rest} ->
-              {:halt, {nil, chunk, next_char <> rest}}
+              if String.valid?(next_char) do
+                {:cont, merge_grapheme_result(chunk, {next_char, rest})}
+              else
+                {:halt, {nil, {chunk, next_char <> rest}}}
+              end
 
             nil ->
-              {:halt, {chunk, "", ""}}
+              {:halt, {chunk, {"", ""}}}
           end
         end
       )
+    end
+
+    defp merge_grapheme_result(chunk, {next_char, rest}) do
+      {chunk <> IO.iodata_to_binary(next_char), String.next_grapheme(rest) || {"", ""}}
     end
   end
 
@@ -69,12 +69,8 @@ defmodule Engine.LogAgent do
     Agent.start_link(&LogState.new/0)
   end
 
-  def lines(agent) do
-    Agent.get(agent, &LogState.lines/1)
-  end
-
-  def pending(agent) do
-    Agent.get(agent, &LogState.pending/1)
+  def buffer(agent) do
+    Agent.get(agent, &LogState.buffer/1)
   end
 
   def process_chunk(agent, {_type, data}) when is_pid(agent) do
