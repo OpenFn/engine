@@ -130,7 +130,7 @@ defmodule Engine.Run.Handler do
   @callback on_start(context :: any()) :: any
   @callback on_log_emit(chunk :: binary(), context :: any()) :: any
   @callback on_finish(result :: Engine.Result.t(), context :: any()) :: any
-  @callback log_callback(agent :: pid(), context :: any(), args :: any()) :: false
+  @callback log_callback(agent :: pid(), context :: any(), args :: any()) :: true
 
   def on_start(_context), do: :noop
   def on_log_emit(_chunk, _context), do: :noop
