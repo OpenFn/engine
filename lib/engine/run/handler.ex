@@ -66,7 +66,7 @@ defmodule Engine.Run.Handler do
       @impl Handler
       def log_callback(log_agent, context, args) do
         Engine.LogAgent.process_chunk(log_agent, args)
-        |> Enum.each(&__MODULE__.on_log_line(&1, context))
+        |> __MODULE__.on_log_emit(context)
 
         true
       end
@@ -112,7 +112,7 @@ defmodule Engine.Run.Handler do
 
       defdelegate env(run_spec, opts), to: Handler
       defdelegate on_start(context), to: Handler
-      defdelegate on_log_line(line, context), to: Handler
+      defdelegate on_log_emit(chunk, context), to: Handler
       defdelegate on_finish(result, context), to: Handler
 
       defoverridable Handler
@@ -128,12 +128,12 @@ defmodule Engine.Run.Handler do
   Called with context, if any - when the Run has been started.
   """
   @callback on_start(context :: any()) :: any
-  @callback on_log_line(line :: list(binary()), context :: any()) :: any
+  @callback on_log_emit(chunk :: binary(), context :: any()) :: any
   @callback on_finish(result :: Engine.Result.t(), context :: any()) :: any
   @callback log_callback(agent :: pid(), context :: any(), args :: any()) :: false
 
   def on_start(_context), do: :noop
-  def on_log_line(_line, _context), do: :noop
+  def on_log_emit(_chunk, _context), do: :noop
   def on_finish(_result, _context), do: :noop
 
   @callback env(run_spec :: %RunSpec{}, opts :: []) :: %{binary() => binary()}
