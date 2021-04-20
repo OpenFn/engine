@@ -60,7 +60,7 @@ defmodule Engine.ShellRuntime do
       |> Enum.join(" \\\n  ")
 
     ~s"""
-    core execute \\
+    exec core execute \\
       #{flags}
     """
   end
