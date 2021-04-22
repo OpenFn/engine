@@ -30,8 +30,6 @@ defmodule Engine.Supervisor do
     name = config[:name]
     project_config = Engine.Config.parse!(config[:project_config])
 
-    Logger.debug(inspect(project_config))
-
     job_state_repo_opts = %Engine.JobStateRepo.StartOpts{
       name: config[:job_state_repo_name],
       basedir: config[:job_state_basedir]
