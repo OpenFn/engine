@@ -22,8 +22,8 @@ defmodule Engine.ShellRuntime do
     """)
 
     Rambo.run(
-      "/usr/bin/env",
-      ["sh", "-c", command],
+      "node",
+      ["-r", ".bin/core", "-", command],
       rambo_opts
     )
     |> case do
@@ -60,7 +60,7 @@ defmodule Engine.ShellRuntime do
       |> Enum.join(" \\\n  ")
 
     ~s"""
-    exec core execute \\
+     execute \\
       #{flags}
     """
   end
