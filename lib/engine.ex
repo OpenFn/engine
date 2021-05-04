@@ -21,21 +21,8 @@ defmodule Engine do
   @doc """
   DEPRECATED
   """
-  def execute_sync(%Message{} = message, %Job{} = job) do
+  def execute_sync(%Message{}, %Job{}) do
     raise "execute_sync/2 is no longer supported"
-    # {:ok, state_path} = Temp.path(%{prefix: "state", suffix: ".json"})
-    # {:ok, final_state_path} = Temp.path(%{prefix: "final_state", suffix: ".json"})
-    # {:ok, expression_path} = Temp.path(%{prefix: "expression", suffix: ".js"})
-
-    # File.write!(state_path, Jason.encode!(message.body))
-    # File.write!(expression_path, job.expression || "")
-
-    # Engine.ShellRuntime.run(%RunSpec{
-    #   state_path: state_path,
-    #   final_state_path: final_state_path,
-    #   expression_path: expression_path,
-    #   adaptor: job.adaptor
-    # })
   end
 
   def handle_message(run_broadcaster, %Message{} = message) do

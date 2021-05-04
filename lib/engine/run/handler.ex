@@ -65,8 +65,8 @@ defmodule Engine.Run.Handler do
 
       @impl Handler
       def log_callback(log_agent, context, args) do
-        Engine.LogAgent.process_chunk(log_agent, args)
-        |> __MODULE__.on_log_emit(context)
+        res = Engine.LogAgent.process_chunk(log_agent, args)
+        res |> __MODULE__.on_log_emit(context)
 
         true
       end

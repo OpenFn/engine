@@ -36,7 +36,7 @@ defmodule Engine.Application.UnitTest do
 
     TestApp.handle_message(%Message{body: %{"b" => 2}})
 
-    Process.sleep(1000)
+    Process.sleep(2000)
 
     Engine.JobStateRepo.get_last_persisted_state_path(
       TestApp.config(:job_state_repo_name),

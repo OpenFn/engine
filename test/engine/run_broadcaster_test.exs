@@ -46,6 +46,7 @@ defmodule Engine.RunBroadcaster.UnitTest do
        %RunBroadcaster.StartOpts{
          name: :test_run_broadcaster,
          run_dispatcher: :test_run_dispatcher,
+         adaptor_service: :test_run_dispatcher,
          config: config,
          job_state_repo: job_state_repo_name
        }}
@@ -79,18 +80,7 @@ defmodule Engine.RunBroadcaster.UnitTest do
       %{body: %{"a" => 1}}
     )
 
-    got_a_run =
-      receive do
-        {:invoke_run, %Engine.Run{}} ->
-          true
-
-        _ ->
-          false
-      after
-        100 -> false
-      end
-
-    assert got_a_run
+    assert_received {:invoke_run, %Engine.Run{}}, 100
   end
 
   test "matches up a CronTrigger to a message", %{

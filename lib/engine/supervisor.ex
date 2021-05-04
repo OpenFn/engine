@@ -11,6 +11,7 @@ defmodule Engine.Supervisor do
   @defaults [
     run_broadcaster_name: :engine_run_broadcaster,
     job_state_repo_name: :engine_job_state_repo,
+    adaptor_service_name: :engine_adaptor_service,
     job_state_basedir: "./tmp"
   ]
 
@@ -35,6 +36,9 @@ defmodule Engine.Supervisor do
       basedir: config[:job_state_basedir]
     }
 
+    # TODO: do we even use this anymore?
+    #       also I think we should use a process registry to communicate between
+    #       the different processes.
     run_registry = String.to_atom("#{name}_registry")
 
     registry = [
@@ -62,6 +66,7 @@ defmodule Engine.Supervisor do
       name: config[:run_broadcaster_name],
       config: project_config,
       run_dispatcher: :run_dispatcher,
+      adaptor_service: config[:adaptor_service_name],
       job_state_repo: config[:job_state_repo_name]
     }
 
@@ -77,11 +82,17 @@ defmodule Engine.Supervisor do
       temp_opts: %{basedir: "./tmp"}
     }
 
+    adaptor_service_opts = [
+      adaptors_path: config[:adaptors_path],
+      name: config[:adaptor_service_name]
+    ]
+
     # start scheduler around here
     children = [
       {Engine.JobStateRepo, job_state_repo_opts},
       %{id: OPQ, start: {OPQ, :init, [[name: :run_task_queue]]}},
       {Registry, registry},
+      {Engine.Adaptor.Service, adaptor_service_opts},
       {Engine.RunBroadcaster, run_broadcaster_opts},
       {Engine.RunDispatcher, run_dispatcher_opts},
       {Engine.Scheduler, [id: name, name: Engine.Scheduler, jobs: scheduler_jobs]},
