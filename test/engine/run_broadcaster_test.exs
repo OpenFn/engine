@@ -23,10 +23,10 @@ defmodule Engine.RunBroadcaster.UnitTest do
             Credential.new(name: "test-credential", body: %{username: "un", password: "pw"})
         ],
         jobs: [
-          test_job = Job.new(name: "test-job", trigger: "test", credential: "test-credential"),
-          cron_job = Job.new(name: "cron-job", trigger: "cron-trigger"),
-          success_flow_job = Job.new(name: "flow-job", trigger: "after-test-job"),
-          failure_flow_job = Job.new(name: "flow-job-failure", trigger: "after-test-job-failure")
+          test_job = Job.new(name: "test-job", trigger: "test", credential: "test-credential", adaptor: "foo"),
+          cron_job = Job.new(name: "cron-job", trigger: "cron-trigger", adaptor: "bar"),
+          success_flow_job = Job.new(name: "flow-job", trigger: "after-test-job", adaptor: "baz"),
+          failure_flow_job = Job.new(name: "flow-job-failure", trigger: "after-test-job-failure", adaptor: "quux")
         ],
         triggers: [
           CriteriaTrigger.new(name: "test", criteria: %{"a" => 1}),
@@ -40,13 +40,21 @@ defmodule Engine.RunBroadcaster.UnitTest do
     job_state_repo_name = :run_broadcaster_job_state_repo_test
 
     start_supervised!({TestServer, [name: :test_run_dispatcher, owner: self()]})
+    start_supervised!(
+      {Engine.Adaptor.Service,
+        [
+          adaptors_path: adaptors_path = "./priv/openfn/runtime",
+          repo: TestRepo,
+          name: :test_adaptor_service
+        ]}
+    )
 
     start_supervised!(
       {RunBroadcaster,
        %RunBroadcaster.StartOpts{
          name: :test_run_broadcaster,
          run_dispatcher: :test_run_dispatcher,
-         adaptor_service: :test_run_dispatcher,
+         adaptor_service: :test_adaptor_service,
          config: config,
          job_state_repo: job_state_repo_name
        }}

@@ -69,7 +69,7 @@ defmodule Engine.RunBroadcaster do
       end)
 
     Enum.each(runs, fn run ->
-      Engine.Adaptor.Service.ensure_installed!(adaptor_service, run.job.adaptor)
+      Engine.Adaptor.Service.install(adaptor_service, run.job.adaptor)
     end)
 
     Enum.each(runs, &RunDispatcher.invoke_run(run_dispatcher, &1))
