@@ -1,7 +1,8 @@
 defmodule Engine.Adaptor.Repo do
   @callback list_local(path :: String.t()) :: list(Engine.Adaptor.t())
-  def list_local(path) do
-    Path.wildcard("#{path}/*/*/*/package.json")
+  def list_local(path) when is_binary(path) do
+    Path.wildcard("#{path}/**/package.json")
+    |> filter_parent_paths()
     |> Enum.map(fn package_json ->
       res = Jason.decode!(File.read!(package_json))
       get = &Map.get(res, &1)
@@ -34,10 +35,33 @@ defmodule Engine.Adaptor.Repo do
         "-c",
         "npm install --no-save --no-package-lock --global-style #{adaptors} --prefix #{dir}"
       ],
-      stderr_to_stdout: true,
-      into: IO.stream(:stdio, :line)
-    )
+      stderr_to_stdout: true
+    ) |> case do
+      {_, 0} -> :ok
+      {stdout, code} ->
+        {:error, {stdout, code}}
 
-    :ok
+    end
+  end
+
+  @doc """
+  Given a list of _potentially_ nested package.json files (i.e. dependancies of
+  our adaptors), `filter_parent_paths/1` reduces the list down to the parent
+  directories by grouping directory names by their shortest common path.
+  """
+  def filter_parent_paths(paths) when is_list(paths) do
+    paths
+    |> Enum.sort(:desc)
+    |> Enum.reduce([], fn path, acc ->
+      base = path |> String.replace("package.json", "")
+
+      parent =
+        acc
+        |> Enum.find(base, fn parent -> String.contains?(base, parent) end)
+
+      acc ++ [parent]
+    end)
+    |> Enum.uniq()
+    |> Enum.map(fn folder -> "#{folder}package.json" end)
   end
 end

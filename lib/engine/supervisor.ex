@@ -12,6 +12,7 @@ defmodule Engine.Supervisor do
     run_broadcaster_name: :engine_run_broadcaster,
     job_state_repo_name: :engine_job_state_repo,
     adaptor_service_name: :engine_adaptor_service,
+    adaptors_path: "./priv/openfn/runtime",
     job_state_basedir: "./tmp"
   ]
 

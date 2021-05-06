@@ -97,26 +97,57 @@ defmodule Engine.Adaptor.Service do
     # TODO: failure cases
     # - doesn't exist
     # - network error
-    repo.install(__MODULE__.build_aliased_name(package_name, version), adaptors_path)
-
-    Agent.get_and_update(
-      agent,
-      fn state ->
-        idx = Enum.find_index(state.adaptors, &match?(^new_adaptor, &1))
-        adaptor = Enum.at(state.adaptors, idx) |> Engine.Adaptor.set_present()
-
-        {adaptor,
-         %{
-           state
-           | adaptors: List.replace_at(state.adaptors, idx, adaptor)
-         }}
-      end
+    IO.inspect(
+      [
+        package_name,
+        version,
+        __MODULE__.build_aliased_name(package_name, version),
+        adaptors_path
+      ],
+      label: "before_install",
+      pretty: true
     )
+
+    repo.install(__MODULE__.build_aliased_name(package_name, version), adaptors_path)
+    |> IO.inspect(label: "results of install")
+    |> case do
+      :ok ->
+        # TODO move to State
+        # Mark new adaptor as present
+        Agent.get_and_update(
+          agent,
+          fn state ->
+            idx = Enum.find_index(state.adaptors, &match?(^new_adaptor, &1))
+            adaptor = Enum.at(state.adaptors, idx) |> Engine.Adaptor.set_present()
+
+            {adaptor,
+             %{
+               state
+               | adaptors: List.replace_at(state.adaptors, idx, adaptor)
+             }}
+          end
+        )
+
+      {:error, {stdout, _code}} ->
+        # TODO move to State
+        # Remove the new adaptor
+        Agent.update(
+          agent,
+          fn state ->
+            %{
+              state
+              | adaptors: Enum.reject(state.adaptors, &match?(^new_adaptor, &1))
+            }
+          end
+        )
+
+        raise "Couldn't install #{package_name} (#{version}).\n#{Enum.join(stdout, "\n")}"
+    end
   end
 
   def resolve_package_name(package_name) when is_binary(package_name) do
-    package_name
-    |> String.split("@")
+    ~r/(@?[\/\d\n\w-]+)(?:@([\d\.\w]+))?$/
+    |> Regex.run(package_name)
     |> case do
       [_, name, version] ->
         {name, version}
