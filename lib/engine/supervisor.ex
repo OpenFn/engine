@@ -37,8 +37,6 @@ defmodule Engine.Supervisor do
     }
 
     # TODO: do we even use this anymore?
-    #       also I think we should use a process registry to communicate between
-    #       the different processes.
     run_registry = String.to_atom("#{name}_registry")
 
     registry = [

@@ -23,10 +23,10 @@ defmodule Engine.RunBroadcaster.UnitTest do
             Credential.new(name: "test-credential", body: %{username: "un", password: "pw"})
         ],
         jobs: [
-          test_job = Job.new(name: "test-job", trigger: "test", credential: "test-credential", adaptor: "foo"),
-          cron_job = Job.new(name: "cron-job", trigger: "cron-trigger", adaptor: "bar"),
-          success_flow_job = Job.new(name: "flow-job", trigger: "after-test-job", adaptor: "baz"),
-          failure_flow_job = Job.new(name: "flow-job-failure", trigger: "after-test-job-failure", adaptor: "quux")
+          test_job = Job.new(name: "test-job", trigger: "test", credential: "test-credential", adaptor: "@openfn/language-http"),
+          cron_job = Job.new(name: "cron-job", trigger: "cron-trigger", adaptor: "@openfn/language-http"),
+          success_flow_job = Job.new(name: "flow-job", trigger: "after-test-job", adaptor: "@openfn/language-http"),
+          failure_flow_job = Job.new(name: "flow-job-failure", trigger: "after-test-job-failure", adaptor: "@openfn/language-http")
         ],
         triggers: [
           CriteriaTrigger.new(name: "test", criteria: %{"a" => 1}),
@@ -40,6 +40,8 @@ defmodule Engine.RunBroadcaster.UnitTest do
     job_state_repo_name = :run_broadcaster_job_state_repo_test
 
     start_supervised!({TestServer, [name: :test_run_dispatcher, owner: self()]})
+    start_supervised!({TestServer, [name: TestRepo, owner: self()]}, id: :test_repo)
+
     start_supervised!(
       {Engine.Adaptor.Service,
         [

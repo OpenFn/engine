@@ -15,8 +15,10 @@ defmodule Engine.Adaptor.Repo do
   end
 
   @doc """
+  ```
   |------------ alias ---------| |----- source &|| version -------|
   @openfn/language-common-v1.2.6@npm:@openfn/language-common@1.2.6
+  ```
   """
   @callback install(adaptors :: list(String.t()) | String.t(), dir :: String.t()) :: :ok
   def install(adaptor, dir) when is_binary(adaptor),
