@@ -28,3 +28,6 @@ engine-*.tar
 /tmp/
 
 excoveralls.json
+
+node_modules
+package*.json
