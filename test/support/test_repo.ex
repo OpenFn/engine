@@ -16,17 +16,22 @@ defmodule TestRepo do
   @behaviour Engine.Adaptor.Repo
 
   @impl Engine.Adaptor.Repo
-  def list_local(_path) do
+  def list_local(path) do
+    GenServer.call(__MODULE__, {:list_local, path})
     [
-      %Engine.Adaptor{name: "@openfn/core", version: "1.3.12", status: :present},
-      %Engine.Adaptor{name: "@openfn/language-common", version: "1.2.6", status: :present}
+      %Engine.Adaptor{name: "@openfn/core", version: "1.3.12", path: "", status: :present},
+      %Engine.Adaptor{
+        name: "@openfn/language-common",
+        version: "1.2.6",
+        path: "",
+        status: :present
+      }
     ]
   end
 
   @impl Engine.Adaptor.Repo
   def install(name, dir) do
     GenServer.call(__MODULE__, {:install, [name, dir]})
-    :ok
+    {:ok, ""}
   end
-
 end

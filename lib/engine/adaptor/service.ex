@@ -24,6 +24,7 @@ defmodule Engine.Adaptor.Service do
   """
 
   use Agent
+  require Logger
 
   defmodule State do
     @moduledoc false
@@ -55,6 +56,10 @@ defmodule Engine.Adaptor.Service do
     def add_adaptor(state, adaptor) do
       %{state | adaptors: state.adaptors ++ [adaptor]}
     end
+
+    def remove_adaptor(state, fun) do
+      %{ state | adaptors: Enum.reject(state.adaptors, fun) }
+    end
   end
 
   def start_link(opts) do
@@ -67,18 +72,28 @@ defmodule Engine.Adaptor.Service do
     Agent.get(agent, fn state -> state.adaptors end)
   end
 
+  def find_adaptor(agent, package) do
+    {package_name, version} = resolve_package_name(package)
+    find_adaptor(agent, package_name, version)
+  end
+
+  def find_adaptor(agent, package_name, version) do
+    Agent.get(agent, &State.find_adaptor(&1, {package_name, version}))
+  end
+
   def installed?(agent, package_name, version) do
     Agent.get(agent, &State.find_adaptor(&1, {package_name, version}))
   end
 
-  def install(agent, package_name) do
-    {package_name, version} = resolve_package_name(package_name)
+  def install(agent, package) do
+    Logger.debug("Requesting adaptor: #{package}")
+    {package_name, version} = resolve_package_name(package)
 
     install(agent, package_name, version)
   end
 
   def install(agent, package_name, version) do
-    existing = agent |> __MODULE__.installed?(package_name, version)
+    existing = agent |> __MODULE__.find_adaptor(package_name, version)
 
     existing || install!(agent, package_name, version)
   end
@@ -94,52 +109,17 @@ defmodule Engine.Adaptor.Service do
         {state.repo, state.adaptors_path}
       end)
 
-    # TODO: failure cases
-    # - doesn't exist
-    # - network error
-    IO.inspect(
-      [
-        package_name,
-        version,
-        __MODULE__.build_aliased_name(package_name, version),
-        adaptors_path
-      ],
-      label: "before_install",
-      pretty: true
-    )
-
     repo.install(__MODULE__.build_aliased_name(package_name, version), adaptors_path)
-    |> IO.inspect(label: "results of install")
     |> case do
-      :ok ->
-        # TODO move to State
-        # Mark new adaptor as present
-        Agent.get_and_update(
-          agent,
-          fn state ->
-            idx = Enum.find_index(state.adaptors, &match?(^new_adaptor, &1))
-            adaptor = Enum.at(state.adaptors, idx) |> Engine.Adaptor.set_present()
-
-            {adaptor,
-             %{
-               state
-               | adaptors: List.replace_at(state.adaptors, idx, adaptor)
-             }}
-          end
-        )
+      {:ok, _stdout} ->
+        agent |> Agent.update(&State.refresh_list/1)
+        # TODO, handle latest version
+        agent |> Agent.get(&State.find_adaptor(&1, {package_name, version}))
 
       {:error, {stdout, _code}} ->
-        # TODO move to State
-        # Remove the new adaptor
-        Agent.update(
-          agent,
-          fn state ->
-            %{
-              state
-              | adaptors: Enum.reject(state.adaptors, &match?(^new_adaptor, &1))
-            }
-          end
-        )
+        agent |> Agent.update(fn state ->
+          State.remove_adaptor(state, &match?(^new_adaptor, &1))
+        end)
 
         raise "Couldn't install #{package_name} (#{version}).\n#{Enum.join(stdout, "\n")}"
     end
@@ -195,5 +175,5 @@ defmodule Engine.Adaptor.Service do
     end
   end
 
-  def build_aliased_name(package, version), do: "#{package}@#{version}"
+  def build_aliased_name(package, version), do: build_aliased_name("#{package}@#{version}")
 end

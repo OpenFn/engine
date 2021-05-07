@@ -1,6 +1,7 @@
 defmodule Engine.Adaptor.Service.Test do
   use ExUnit.Case, async: true
 
+  alias Engine.Adaptor
   alias Engine.Adaptor.Service
 
   setup do
@@ -29,19 +30,24 @@ defmodule Engine.Adaptor.Service.Test do
     refute Service.installed?(service, "@openfn/core", "1.4.0")
   end
 
+  test "can perform lookups on adaptors", %{service: service} do
+    %Adaptor{name: "@openfn/core", version: "1.3.12"} =
+      Service.find_adaptor(service, "@openfn/core@1.3.12")
+    # %Adaptor{name: "@openfn/core", version: "1.3.12"} =
+    #   Service.find_adaptor(service, "@openfn/core@latest")
+  end
+
   test "can install an adaptor from npm", %{service: service, adaptors_path: adaptors_path} do
-    installed_adaptor = %Engine.Adaptor{
-      name: "@openfn/language-common",
-      version: "1.2.7",
-      status: :present
-    }
+    Service.install(service, "@openfn/language-common", "1.2.7")
 
-    assert installed_adaptor == Service.install(service, "@openfn/language-common", "1.2.7")
+    assert_receive {:install,
+                    [
+                      "@openfn/language-common-v1.2.7@npm:@openfn/language-common@1.2.7",
+                      ^adaptors_path
+                    ]},
+                   100
 
-    assert_received {:install, ["@openfn/language-common@1.2.7", ^adaptors_path]}, 100
-
-    assert Service.get_adaptors(service)
-           |> Enum.find(&match?(^installed_adaptor, &1))
+    assert_receive {:list_local, ^adaptors_path}, 100
   end
 
   test "build_aliased_name" do

@@ -1,18 +1,27 @@
 defmodule Engine.Adaptor.Repo do
   @callback list_local(path :: String.t()) :: list(Engine.Adaptor.t())
-  def list_local(path) when is_binary(path) do
-    Path.wildcard("#{path}/**/package.json")
-    |> filter_parent_paths()
-    |> Enum.map(fn package_json ->
-      res = Jason.decode!(File.read!(package_json))
-      get = &Map.get(res, &1)
+  def list_local(path, depth \\ 4) when is_binary(path) do
+    System.cmd("find", ~w[#{path} -maxdepth #{depth} -type f -name package.json])
+    |> case do
+      {stdout, 0} ->
+        stdout
+        |> String.trim()
+        |> String.split("\n")
+        |> Enum.map(fn package_json ->
+          res = Jason.decode!(File.read!(package_json))
+          get = &Map.get(res, &1)
 
-      %Engine.Adaptor{
-        name: get.("name"),
-        version: get.("version"),
-        status: :present
-      }
-    end)
+          %Engine.Adaptor{
+            name: get.("name"),
+            version: get.("version"),
+            path: String.replace_suffix(package_json, "/package.json", ""),
+            status: :present
+          }
+        end)
+
+      {stdout, _} ->
+        raise "Failed to list adaptors from path: #{path}\n#{stdout}"
+    end
   end
 
   @doc """
@@ -21,26 +30,39 @@ defmodule Engine.Adaptor.Repo do
   @openfn/language-common-v1.2.6@npm:@openfn/language-common@1.2.6
   ```
   """
-  @callback install(adaptors :: list(String.t()) | String.t(), dir :: String.t()) :: :ok
+  @callback install(adaptors :: list(String.t()) | String.t(), dir :: String.t()) ::
+              {:ok, binary()} | {:error, binary()}
+  @spec install(adaptors :: list(String.t()) | String.t(), dir :: String.t()) ::
+          {:ok, binary()} | {:error, binary()}
   def install(adaptor, dir) when is_binary(adaptor),
     do: install([adaptor], dir)
 
   def install(adaptors, dir) when is_list(adaptors) do
-    adaptors = Enum.join(adaptors, " ")
-
     System.cmd(
       "/usr/bin/env",
       [
         "sh",
         "-c",
-        "npm install --no-save --no-package-lock --global-style #{adaptors} --prefix #{dir}"
+        """
+        npm install \
+          --no-save \
+          --ignore-scripts \
+          --no-fund \
+          --no-audit \
+          --no-package-lock \
+          --global-style \
+          --prefix #{dir} \
+          #{Enum.join(adaptors, " ")}
+        """
       ],
       stderr_to_stdout: true
-    ) |> case do
-      {_, 0} -> :ok
+    )
+    |> case do
+      {stdout, 0} ->
+        {:ok, stdout}
+
       {stdout, code} ->
         {:error, {stdout, code}}
-
     end
   end
 

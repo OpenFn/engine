@@ -1,4 +1,10 @@
 defmodule Engine.ShellRuntime do
+  @moduledoc """
+  Provides an interface between a `RunSpec` and the shell.
+
+  Internally it calls `node`, and more specifically the
+  [OpenFn core](https://github.com/openfn/core) CLI.
+  """
   alias Engine.{RunSpec, Result}
   require Logger
 

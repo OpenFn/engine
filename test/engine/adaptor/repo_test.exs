@@ -26,7 +26,5 @@ defmodule Engine.Adaptor.Repo.Test do
              "priv/openfn/runtime/node_modules/@openfn/language-common/package.json",
              "priv/openfn/runtime/node_modules/@openfn/core/package.json"
            ]
-
-    assert true
   end
 end
