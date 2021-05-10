@@ -25,7 +25,9 @@ defmodule Engine.Application.UnitTest do
   test "can start Engine directly" do
     start_supervised!({
       Engine,
-      [project_config: fixture(:project_config, :yaml), name: TestApp]
+      [project_config: fixture(:project_config, :yaml),
+       adaptors_path: "./priv/openfn/runtime",
+      name: TestApp]
     })
 
     {:ok, %Engine.Config{}} =
@@ -35,7 +37,7 @@ defmodule Engine.Application.UnitTest do
   test "can call handle_message without Config" do
     start_supervised!(TestApp)
 
-    TestApp.handle_message(%Message{body: %{"b" => 2}})
+    TestApp.handle_message(%Message{body: %{"b" => 2}}) |> IO.inspect(label: "TestApp")
 
     Process.sleep(2000)
 

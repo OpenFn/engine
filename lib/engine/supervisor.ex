@@ -24,6 +24,9 @@ defmodule Engine.Supervisor do
     config[:project_config] ||
       raise ArgumentError, ":project_config is required to start an engine."
 
+    config[:adaptors_path] ||
+      raise ArgumentError, ":adaptors_path is required to start an engine."
+
     sup_name = Module.concat(name, "Supervisor")
     Supervisor.start_link(__MODULE__, config, name: sup_name)
   end

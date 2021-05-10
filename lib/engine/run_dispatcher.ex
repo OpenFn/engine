@@ -57,7 +57,7 @@ defmodule Engine.RunDispatcher do
     end
 
     {:ok,
-     %{opts | handler_env: %{"PATH" => "#{opts.adaptors_path}/.bin:#{System.get_env("PATH")}"}}}
+     %{opts | handler_env: %{"PATH" => "#{opts.adaptors_path}/node_modules/.bin:#{System.get_env("PATH")}"}}}
   end
 
   def handle_call({:invoke_run, run}, _from, state) do
@@ -76,7 +76,7 @@ defmodule Engine.RunDispatcher do
       result =
         GenericHandler.start(run.run_spec,
           env: state.handler_env
-        )
+        ) |> IO.inspect(label: "OPQ.enqueue/2")
 
       if result.exit_code == 0 do
         JobStateRepo.register(state.job_state_repo, run.job, run.run_spec.final_state_path)

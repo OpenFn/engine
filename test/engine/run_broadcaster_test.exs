@@ -103,19 +103,7 @@ defmodule Engine.RunBroadcaster.UnitTest do
       cron_trigger
     )
 
-    got_a_run =
-      receive do
-        {:invoke_run, %Engine.Run{trigger: ^cron_trigger}} ->
-          true
-
-        any ->
-          IO.puts("Got: #{inspect(any)}")
-          false
-      after
-        100 -> false
-      end
-
-    assert got_a_run
+    assert_receive {:invoke_run, %Engine.Run{trigger: ^cron_trigger}}
 
     state_path = Temp.path!(suffix: "run-broadcaster-test.json")
     File.write!(state_path, ~s({"foo": 1}))
