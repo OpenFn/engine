@@ -21,7 +21,38 @@ defmodule Engine.Adaptor.Service do
   The adaptor is marked as `:installing`, to allow for conditional behaviour
   elsewhere such as delaying or rejecting processing until the adaptor becomes
   available.
+
+  ## Looking up adaptors
+
+  The module leans on Elixir's built-in `Version` module to provide version
+  lookups.
+
+  When looking up an adaptor, either a string or a tuple can be used.
+  In the case of requesting the latest version, any one of these will return
+  the latest version the service is aware of.
+
+  - `@openfn/language-http`
+  - `@openfn/language-http@latest`
+  - `{"@openfn/language-http", nil}`
+  - `{"@openfn/language-http", "latest"}`
+
+  You can also request a specific version, or use a range specification:
+
+  - `@openfn/language-http@1.2.3`
+  - `{"@openfn/language-http", "~> 1.2.0"}`
+  - `{"@openfn/language-http", "< 2.0.0"}`
+
+  > **NOTE**
+  > More complex npm style install strings like: `">=0.1.0 <0.2.0"`
+  > are not supported.
+  > Generally the tuple style is preferred when using range specifications as
+  > the npm style strings have a simplistic regex splitter.
+
+  See [Version](https://hexdocs.pm/elixir/Version.html) for more details on
+  matching versions.
   """
+
+  @type package_spec :: {name :: String.t(), version :: String.t() | nil}
 
   use Agent
   require Logger
@@ -58,7 +89,7 @@ defmodule Engine.Adaptor.Service do
     end
 
     def remove_adaptor(state, fun) do
-      %{ state | adaptors: Enum.reject(state.adaptors, fun) }
+      %{state | adaptors: Enum.reject(state.adaptors, fun)}
     end
   end
 
@@ -72,33 +103,57 @@ defmodule Engine.Adaptor.Service do
     Agent.get(agent, fn state -> state.adaptors end)
   end
 
-  def find_adaptor(agent, package) do
-    {package_name, version} = resolve_package_name(package)
-    find_adaptor(agent, package_name, version)
+  @spec find_adaptor(Agent.agent(), package :: String.t()) :: Adaptor.t() | nil
+  def find_adaptor(agent, package) when is_binary(package) do
+    find_adaptor(agent, resolve_package_name(package))
   end
 
-  def find_adaptor(agent, package_name, version) do
-    Agent.get(agent, &State.find_adaptor(&1, {package_name, version}))
+  @spec find_adaptor(Agent.agent(), package_spec()) :: Adaptor.t() | nil
+  def find_adaptor(agent, {package_name, version}) do
+    requirement = version_to_requirement(version)
+
+    get_adaptors(agent)
+    |> Enum.filter(fn adaptor ->
+      match?(%{name: ^package_name}, adaptor) &&
+        Version.match?(adaptor.version, requirement)
+    end)
+    |> Enum.max_by(
+      fn %{version: version} ->
+        Version.parse!(version)
+      end,
+      Version,
+      fn -> nil end
+    )
   end
 
-  def installed?(agent, package_name, version) do
-    Agent.get(agent, &State.find_adaptor(&1, {package_name, version}))
+  defp version_to_requirement(version) do
+    cond do
+      version in ["latest", nil] ->
+        "> 0.0.0"
+
+      true ->
+        version
+    end
+    |> Version.parse_requirement!()
   end
 
-  def install(agent, package) do
+  def installed?(agent, package_spec) do
+    !!find_adaptor(agent, package_spec)
+  end
+
+  def install(agent, package) when is_binary(package) do
     Logger.debug("Requesting adaptor: #{package}")
-    {package_name, version} = resolve_package_name(package)
 
-    install(agent, package_name, version)
+    install(agent, resolve_package_name(package))
   end
 
-  def install(agent, package_name, version) do
-    existing = agent |> __MODULE__.find_adaptor(package_name, version)
+  def install(agent, package_spec) do
+    existing = agent |> find_adaptor(package_spec)
 
-    existing || install!(agent, package_name, version)
+    existing || install!(agent, package_spec)
   end
 
-  def install!(agent, package_name, version) do
+  def install!(agent, {package_name, version}) do
     new_adaptor = %Engine.Adaptor{name: package_name, version: version, status: :installing}
 
     agent |> Agent.update(&State.add_adaptor(&1, new_adaptor))
@@ -117,7 +172,8 @@ defmodule Engine.Adaptor.Service do
         agent |> Agent.get(&State.find_adaptor(&1, {package_name, version}))
 
       {:error, {stdout, _code}} ->
-        agent |> Agent.update(fn state ->
+        agent
+        |> Agent.update(fn state ->
           State.remove_adaptor(state, &match?(^new_adaptor, &1))
         end)
 
@@ -147,7 +203,7 @@ defmodule Engine.Adaptor.Service do
   to rely on npms built-in package aliasing.
 
   E.g. `@openfn/language-http@1.2.8` turns into:
-       `@openfn/language-common-v1.2.6@npm:@openfn/language-common@1.2.6`
+       `@openfn/language-http-v1.2.8@npm:@openfn/language-http@1.2.8`
 
   Which is pretty long winded but necessary for the reason above.
 

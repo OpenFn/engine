@@ -25,6 +25,12 @@ defmodule TestRepo do
         version: "1.2.6",
         path: "",
         status: :present
+      },
+      %Engine.Adaptor{
+        name: "@openfn/language-common",
+        version: "1.2.8",
+        path: "",
+        status: :present
       }
     ]
   end

@@ -24,21 +24,30 @@ defmodule Engine.Adaptor.Service.Test do
   end
 
   test "can tell if something is installed or not", %{service: service} do
-    assert Service.installed?(service, "@openfn/core", "1.3.12")
-    assert Service.installed?(service, "@openfn/core", nil)
-
-    refute Service.installed?(service, "@openfn/core", "1.4.0")
+    assert Service.installed?(service, {"@openfn/core", "1.3.12"})
+    assert Service.installed?(service, {"@openfn/core", nil})
+    refute Service.installed?(service, {"@openfn/core", "1.4.0"})
   end
 
   test "can perform lookups on adaptors", %{service: service} do
     %Adaptor{name: "@openfn/core", version: "1.3.12"} =
       Service.find_adaptor(service, "@openfn/core@1.3.12")
+
     # %Adaptor{name: "@openfn/core", version: "1.3.12"} =
-    #   Service.find_adaptor(service, "@openfn/core@latest")
+    #   Service.find_adaptor(service, {"@openfn/core", ">=1.3.10 <2.0.0"})
+
+    nil =
+      Service.find_adaptor(service, {"@openfn/core", "< 1.3.12"})
+
+    %Adaptor{name: "@openfn/language-common", version: "1.2.8"} =
+      Service.find_adaptor(service, { "@openfn/language-common", "latest" })
+
+    %Adaptor{name: "@openfn/core", version: "1.3.12"} =
+      Service.find_adaptor(service, "@openfn/core@latest")
   end
 
   test "can install an adaptor from npm", %{service: service, adaptors_path: adaptors_path} do
-    Service.install(service, "@openfn/language-common", "1.2.7")
+    Service.install(service, {"@openfn/language-common", "1.2.7"})
 
     assert_receive {:install,
                     [
@@ -59,5 +68,8 @@ defmodule Engine.Adaptor.Service.Test do
 
     assert "@openfn/language-common" ==
              Service.build_aliased_name("@openfn/language-common")
+
+    assert "@openfn/language-common-latest@npm:@openfn/language-common" ==
+             Service.build_aliased_name("@openfn/language-common@latest")
   end
 end
