@@ -130,6 +130,8 @@ defmodule Engine.Adaptor.Service do
     cond do
       version in ["latest", nil] ->
         "> 0.0.0"
+      String.match?(version, ~r/[<=>]/) ->
+        raise ArgumentError, message: "Version specs not implemented yet."
 
       true ->
         version

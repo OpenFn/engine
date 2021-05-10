@@ -33,17 +33,23 @@ defmodule Engine.Adaptor.Service.Test do
     %Adaptor{name: "@openfn/core", version: "1.3.12"} =
       Service.find_adaptor(service, "@openfn/core@1.3.12")
 
-    # %Adaptor{name: "@openfn/core", version: "1.3.12"} =
-    #   Service.find_adaptor(service, {"@openfn/core", ">=1.3.10 <2.0.0"})
+    assert_raise ArgumentError, "Version specs not implemented yet.", fn ->
+      %Adaptor{name: "@openfn/core", version: "1.3.12"} =
+        Service.find_adaptor(service, {"@openfn/core", ">=1.3.10 <2.0.0"})
+    end
 
-    nil =
-      Service.find_adaptor(service, {"@openfn/core", "< 1.3.12"})
-
-    %Adaptor{name: "@openfn/language-common", version: "1.2.8"} =
-      Service.find_adaptor(service, { "@openfn/language-common", "latest" })
+    assert_raise ArgumentError, "Version specs not implemented yet.", fn ->
+      nil = Service.find_adaptor(service, {"@openfn/core", "< 1.3.12"})
+    end
 
     %Adaptor{name: "@openfn/core", version: "1.3.12"} =
       Service.find_adaptor(service, "@openfn/core@latest")
+
+    %Adaptor{name: "@openfn/language-common", version: "1.2.8"} =
+      Service.find_adaptor(service, {"@openfn/language-common", "latest"})
+
+    %Adaptor{name: "@openfn/language-common", version: "1.2.6"} =
+      Service.find_adaptor(service, {"@openfn/language-common", "1.2.6"})
   end
 
   test "can install an adaptor from npm", %{service: service, adaptors_path: adaptors_path} do
