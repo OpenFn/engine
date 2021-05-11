@@ -153,9 +153,12 @@ defmodule Engine.Adaptor.Service do
   @spec install(Agent.agent(), package_spec()) ::
           {:ok, Engine.Adaptor.t()} | {:error, {Collectable.t(), exit_status :: non_neg_integer}}
   def install(agent, package_spec) do
-    existing = agent |> find_adaptor(package_spec)
-
-    existing || install!(agent, package_spec)
+    agent
+    |> find_adaptor(package_spec)
+    |> case do
+      nil -> install!(agent, package_spec)
+      existing -> {:ok, existing}
+    end
   end
 
   def install!(agent, {package_name, version} = package_spec) do
