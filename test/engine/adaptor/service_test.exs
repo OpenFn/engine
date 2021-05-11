@@ -67,15 +67,6 @@ defmodule Engine.Adaptor.Service.Test do
 
   test "build_aliased_name" do
     assert "@openfn/language-common-v1.2.6@npm:@openfn/language-common@1.2.6" ==
-             Service.build_aliased_name("@openfn/language-common@1.2.6")
-
-    assert "@openfn/language-common-latest@npm:@openfn/language-common" ==
-             Service.build_aliased_name("@openfn/language-common@latest")
-
-    assert "@openfn/language-common" ==
-             Service.build_aliased_name("@openfn/language-common")
-
-    assert "@openfn/language-common-latest@npm:@openfn/language-common" ==
-             Service.build_aliased_name("@openfn/language-common@latest")
+             Service.build_aliased_name({"@openfn/language-common", "1.2.6"})
   end
 end

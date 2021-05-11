@@ -31,9 +31,9 @@ defmodule Engine.Adaptor.Repo do
   ```
   """
   @callback install(adaptors :: list(String.t()) | String.t(), dir :: String.t()) ::
-              {:ok, binary()} | {:error, binary()}
+              {Collectable.t(), exit_status :: non_neg_integer}
   @spec install(adaptors :: list(String.t()) | String.t(), dir :: String.t()) ::
-          {:ok, binary()} | {:error, binary()}
+          {Collectable.t(), exit_status :: non_neg_integer}
   def install(adaptor, dir) when is_binary(adaptor),
     do: install([adaptor], dir)
 
@@ -57,13 +57,6 @@ defmodule Engine.Adaptor.Repo do
       ],
       stderr_to_stdout: true
     )
-    |> case do
-      {stdout, 0} ->
-        {:ok, stdout}
-
-      {stdout, code} ->
-        {:error, {stdout, code}}
-    end
   end
 
   @doc """

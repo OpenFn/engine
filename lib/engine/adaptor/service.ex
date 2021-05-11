@@ -130,6 +130,7 @@ defmodule Engine.Adaptor.Service do
     cond do
       version in ["latest", nil] ->
         "> 0.0.0"
+
       String.match?(version, ~r/[<=>]/) ->
         raise ArgumentError, message: "Version specs not implemented yet."
 
@@ -143,19 +144,21 @@ defmodule Engine.Adaptor.Service do
     !!find_adaptor(agent, package_spec)
   end
 
+  @spec install(Agent.agent(), binary()) ::
+          {:ok, Engine.Adaptor.t()} | {:error, {Collectable.t(), exit_status :: non_neg_integer}}
   def install(agent, package) when is_binary(package) do
-    Logger.debug("Requesting adaptor: #{package}")
-
     install(agent, resolve_package_name(package))
   end
 
+  @spec install(Agent.agent(), package_spec()) ::
+          {:ok, Engine.Adaptor.t()} | {:error, {Collectable.t(), exit_status :: non_neg_integer}}
   def install(agent, package_spec) do
     existing = agent |> find_adaptor(package_spec)
 
     existing || install!(agent, package_spec)
   end
 
-  def install!(agent, {package_name, version}) do
+  def install!(agent, {package_name, version} = package_spec) do
     new_adaptor = %Engine.Adaptor{name: package_name, version: version, status: :installing}
 
     agent |> Agent.update(&State.add_adaptor(&1, new_adaptor))
@@ -166,20 +169,19 @@ defmodule Engine.Adaptor.Service do
         {state.repo, state.adaptors_path}
       end)
 
-    repo.install(__MODULE__.build_aliased_name(package_name, version), adaptors_path)
+    repo.install(build_aliased_name(package_spec), adaptors_path)
     |> case do
-      {:ok, _stdout} ->
+      {_stdout, 0} ->
         agent |> Agent.update(&State.refresh_list/1)
-        # TODO, handle latest version
-        agent |> Agent.get(&State.find_adaptor(&1, {package_name, version}))
+        {:ok, agent |> Agent.get(&State.find_adaptor(&1, {package_name, version}))}
 
-      {:error, {stdout, _code}} ->
+      {stdout, code} ->
         agent
         |> Agent.update(fn state ->
           State.remove_adaptor(state, &match?(^new_adaptor, &1))
         end)
 
-        raise "Couldn't install #{package_name} (#{version}).\n#{Enum.join(stdout, "\n")}"
+        {:error, {stdout, code}}
     end
   end
 
@@ -212,26 +214,8 @@ defmodule Engine.Adaptor.Service do
   If using this module as a base, it's likely you would need to adaptor this
   to suit your particular naming strategy.
   """
-  @callback build_aliased_name(package :: String.t(), version :: String.t() | nil) :: String.t()
-  def build_aliased_name(package, version \\ nil)
 
-  def build_aliased_name(package, version) when is_nil(version) do
-    package
-    |> String.split("@")
-    |> case do
-      [_, name, "latest"] ->
-        "@#{name}-latest@npm:@#{name}"
-
-      [_, name, version] ->
-        "@#{name}-v#{version}@npm:@#{name}@#{version}"
-
-      [_, _name] ->
-        package
-
-      _ ->
-        raise ArgumentError, "Only npm style package names are currently supported"
-    end
+  def build_aliased_name({package, version}) do
+    "#{package}-v#{version}@npm:#{package}@#{version}"
   end
-
-  def build_aliased_name(package, version), do: build_aliased_name("#{package}@#{version}")
 end

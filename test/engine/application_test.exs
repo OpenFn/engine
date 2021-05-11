@@ -37,7 +37,7 @@ defmodule Engine.Application.UnitTest do
   test "can call handle_message without Config" do
     start_supervised!(TestApp)
 
-    TestApp.handle_message(%Message{body: %{"b" => 2}}) |> IO.inspect(label: "TestApp")
+    TestApp.handle_message(%Message{body: %{"b" => 2}})
 
     Process.sleep(2000)
 
