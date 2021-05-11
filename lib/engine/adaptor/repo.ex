@@ -7,6 +7,7 @@ defmodule Engine.Adaptor.Repo do
         stdout
         |> String.trim()
         |> String.split("\n")
+        |> filter_parent_paths()
         |> Enum.map(fn package_json ->
           res = Jason.decode!(File.read!(package_json))
           get = &Map.get(res, &1)
