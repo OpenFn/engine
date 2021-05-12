@@ -35,6 +35,7 @@ defmodule Engine.Adaptor.Service do
   - `@openfn/language-http@latest`
   - `{"@openfn/language-http", nil}`
   - `{"@openfn/language-http", "latest"}`
+  - `{~r/language-http/, "latest"}`
 
   You can also request a specific version, or use a range specification:
 
@@ -52,7 +53,7 @@ defmodule Engine.Adaptor.Service do
   matching versions.
   """
 
-  @type package_spec :: {name :: String.t(), version :: String.t() | nil}
+  @type package_spec :: {name :: String.t() | Regex.t(), version :: String.t() | nil}
 
   use Agent
   require Logger
@@ -113,10 +114,7 @@ defmodule Engine.Adaptor.Service do
     requirement = version_to_requirement(version)
 
     get_adaptors(agent)
-    |> Enum.filter(fn adaptor ->
-      match?(%{name: ^package_name}, adaptor) &&
-        Version.match?(adaptor.version, requirement)
-    end)
+    |> Enum.filter(&by_name_and_requirement(&1, package_name, requirement))
     |> Enum.max_by(
       fn %{version: version} ->
         Version.parse!(version)
@@ -124,6 +122,16 @@ defmodule Engine.Adaptor.Service do
       Version,
       fn -> nil end
     )
+  end
+
+  defp by_name_and_requirement(adaptor, matcher = %Regex{}, requirement) do
+    !!(Regex.match?(matcher, adaptor.name) &&
+         Version.match?(adaptor.version, requirement))
+  end
+
+  defp by_name_and_requirement(adaptor, name, requirement) do
+    !!(match?(%{name: ^name}, adaptor) &&
+         Version.match?(adaptor.version, requirement))
   end
 
   defp version_to_requirement(version) do
@@ -217,7 +225,6 @@ defmodule Engine.Adaptor.Service do
   If using this module as a base, it's likely you would need to adaptor this
   to suit your particular naming strategy.
   """
-
   def build_aliased_name({package, version}) do
     "#{package}-v#{version}@npm:#{package}@#{version}"
   end
