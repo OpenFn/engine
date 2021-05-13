@@ -183,7 +183,8 @@ defmodule Engine.Adaptor.Service do
     repo.install(build_aliased_name(package_spec), adaptors_path)
     |> case do
       {_stdout, 0} ->
-        agent |> Agent.update(&State.refresh_list/1)
+        Logger.info("Refreshing Adaptor list")
+        agent |> Agent.update(&State.refresh_list/1, 30_000)
         {:ok, agent |> Agent.get(&State.find_adaptor(&1, {package_name, version}))}
 
       {stdout, code} ->
