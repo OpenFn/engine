@@ -32,7 +32,7 @@ defmodule Engine.RunDispatcher.UnitTest do
          queue: queue,
          task_supervisor: :task_supervisor,
          job_state_repo: job_state_repo_name,
-         adaptors_path: "priv/openfn/runtime/node_modules",
+         adaptors_path: "priv/openfn/runtime",
          run_broadcaster: run_broadcaster
        }}
     )

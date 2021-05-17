@@ -14,10 +14,11 @@ defmodule Engine.RunBroadcaster do
             config: Config.t(),
             run_dispatcher: GenServer.name(),
             job_state_repo: GenServer.name(),
+            adaptor_service: GenServer.name(),
             name: GenServer.name()
           }
 
-    @enforce_keys [:name, :run_dispatcher, :job_state_repo]
+    @enforce_keys [:name, :run_dispatcher, :job_state_repo, :adaptor_service]
     defstruct @enforce_keys ++ [config: %Config{}]
   end
 
@@ -28,27 +29,30 @@ defmodule Engine.RunBroadcaster do
             config: Config.t(),
             run_dispatcher: GenServer.name(),
             job_state_repo: GenServer.name(),
+            adaptor_service: GenServer.name(),
             runs: []
           }
 
-    @enforce_keys [:run_dispatcher, :job_state_repo]
+    @enforce_keys [:run_dispatcher, :job_state_repo, :adaptor_service]
     defstruct @enforce_keys ++ [config: %Config{}, runs: []]
   end
 
   def start_link(%StartOpts{} = opts) do
     state =
       opts
-      |> Map.take([:config, :run_dispatcher, :job_state_repo])
+      |> Map.take([:config, :run_dispatcher, :job_state_repo, :adaptor_service])
 
     GenServer.start_link(__MODULE__, state, name: opts.name)
   end
 
+  @impl GenServer
   def init(opts) do
     {:ok, struct!(State, opts)}
   end
 
+  @impl GenServer
   def handle_call({:handle_message, message}, _from, state) do
-    %{config: config, run_dispatcher: run_dispatcher} = state
+    %{config: config, run_dispatcher: run_dispatcher, adaptor_service: adaptor_service} = state
 
     triggers = Matcher.get_matches(Config.triggers(config, :criteria), message)
 
@@ -64,7 +68,11 @@ defmodule Engine.RunBroadcaster do
         )
       end)
 
-    runs |> Enum.each(&RunDispatcher.invoke_run(run_dispatcher, &1))
+    Enum.each(runs, fn run ->
+      Engine.Adaptor.Service.install(adaptor_service, run.job.adaptor)
+    end)
+
+    Enum.each(runs, &RunDispatcher.invoke_run(run_dispatcher, &1))
 
     {:reply, runs, state}
   end

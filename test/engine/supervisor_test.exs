@@ -10,6 +10,7 @@ defmodule Engine.Supervisor.UnitTest do
        [
          name: "Foo",
          project_config: fixture(:project_config, :yaml),
+         adaptors_path: "./priv/openfn/runtime",
          otp_app: :engine
        ]}
     )

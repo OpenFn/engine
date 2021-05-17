@@ -4,14 +4,14 @@ defmodule TestApp do
   use Engine.Application,
     project_config: fixture(:project_config, :yaml),
     job_state_basedir: Temp.path!(),
-    adaptors_path: "./priv/openfn/runtime/node_modules",
+    adaptors_path: "./priv/openfn/runtime",
     otp_app: :engine
 end
 
 defmodule AppConfigured do
   use Engine.Application,
     otp_app: :engine,
-    adaptors_path: "./priv/openfn/runtime/node_modules"
+    adaptors_path: "./priv/openfn/runtime"
 end
 
 defmodule Engine.Application.UnitTest do
@@ -20,11 +20,14 @@ defmodule Engine.Application.UnitTest do
   import Engine.TestUtil
 
   alias Engine.Message
+  @moduletag timeout: 10_000
 
   test "can start Engine directly" do
     start_supervised!({
       Engine,
-      [project_config: fixture(:project_config, :yaml), name: TestApp]
+      [project_config: fixture(:project_config, :yaml),
+       adaptors_path: "./priv/openfn/runtime",
+      name: TestApp]
     })
 
     {:ok, %Engine.Config{}} =
@@ -36,7 +39,7 @@ defmodule Engine.Application.UnitTest do
 
     TestApp.handle_message(%Message{body: %{"b" => 2}})
 
-    Process.sleep(1000)
+    Process.sleep(2000)
 
     Engine.JobStateRepo.get_last_persisted_state_path(
       TestApp.config(:job_state_repo_name),

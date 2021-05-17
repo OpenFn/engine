@@ -11,6 +11,8 @@ defmodule Engine.Supervisor do
   @defaults [
     run_broadcaster_name: :engine_run_broadcaster,
     job_state_repo_name: :engine_job_state_repo,
+    adaptor_service_name: :engine_adaptor_service,
+    adaptors_path: "./priv/openfn/runtime",
     job_state_basedir: "./tmp"
   ]
 
@@ -22,6 +24,9 @@ defmodule Engine.Supervisor do
     config[:project_config] ||
       raise ArgumentError, ":project_config is required to start an engine."
 
+    config[:adaptors_path] ||
+      raise ArgumentError, ":adaptors_path is required to start an engine."
+
     sup_name = Module.concat(name, "Supervisor")
     Supervisor.start_link(__MODULE__, config, name: sup_name)
   end
@@ -30,13 +35,12 @@ defmodule Engine.Supervisor do
     name = config[:name]
     project_config = Engine.Config.parse!(config[:project_config])
 
-    Logger.debug(inspect(project_config))
-
     job_state_repo_opts = %Engine.JobStateRepo.StartOpts{
       name: config[:job_state_repo_name],
       basedir: config[:job_state_basedir]
     }
 
+    # TODO: do we even use this anymore?
     run_registry = String.to_atom("#{name}_registry")
 
     registry = [
@@ -64,6 +68,7 @@ defmodule Engine.Supervisor do
       name: config[:run_broadcaster_name],
       config: project_config,
       run_dispatcher: :run_dispatcher,
+      adaptor_service: config[:adaptor_service_name],
       job_state_repo: config[:job_state_repo_name]
     }
 
@@ -79,11 +84,17 @@ defmodule Engine.Supervisor do
       temp_opts: %{basedir: "./tmp"}
     }
 
+    adaptor_service_opts = [
+      adaptors_path: config[:adaptors_path],
+      name: config[:adaptor_service_name]
+    ]
+
     # start scheduler around here
     children = [
       {Engine.JobStateRepo, job_state_repo_opts},
       %{id: OPQ, start: {OPQ, :init, [[name: :run_task_queue]]}},
       {Registry, registry},
+      {Engine.Adaptor.Service, adaptor_service_opts},
       {Engine.RunBroadcaster, run_broadcaster_opts},
       {Engine.RunDispatcher, run_dispatcher_opts},
       {Engine.Scheduler, [id: name, name: Engine.Scheduler, jobs: scheduler_jobs]},

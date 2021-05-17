@@ -1,6 +1,13 @@
 defmodule Engine.RunDispatcher do
   @moduledoc """
-  Server to coordinate executing Runs with their associated RunAgents
+  Server to coordinate executing Runs via ShellRuntime.
+
+  It converts a `Run` into a `RunSpec`, which also builds and stores the state
+  on the local filesystem. Once the spec has been prepared it is pushed onto
+  an in-memory queue.
+
+  The `GenericHandler` receives the `RunSpec` and any extra ENV variables,
+  and calls `start/2` provided by `Engine.Run.Handler`.
 
   In order to start RunDispatcher, it requires:
 
@@ -50,7 +57,12 @@ defmodule Engine.RunDispatcher do
     end
 
     {:ok,
-     %{opts | handler_env: %{"PATH" => "#{opts.adaptors_path}/.bin:#{System.get_env("PATH")}"}}}
+     %{
+       opts
+       | handler_env: %{
+           "PATH" => "#{opts.adaptors_path}/node_modules/.bin:#{System.get_env("PATH")}"
+         }
+     }}
   end
 
   def handle_call({:invoke_run, run}, _from, state) do

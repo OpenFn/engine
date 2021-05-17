@@ -23,10 +23,10 @@ defmodule Engine.RunBroadcaster.UnitTest do
             Credential.new(name: "test-credential", body: %{username: "un", password: "pw"})
         ],
         jobs: [
-          test_job = Job.new(name: "test-job", trigger: "test", credential: "test-credential"),
-          cron_job = Job.new(name: "cron-job", trigger: "cron-trigger"),
-          success_flow_job = Job.new(name: "flow-job", trigger: "after-test-job"),
-          failure_flow_job = Job.new(name: "flow-job-failure", trigger: "after-test-job-failure")
+          test_job = Job.new(name: "test-job", trigger: "test", credential: "test-credential", adaptor: "@openfn/language-http"),
+          cron_job = Job.new(name: "cron-job", trigger: "cron-trigger", adaptor: "@openfn/language-http"),
+          success_flow_job = Job.new(name: "flow-job", trigger: "after-test-job", adaptor: "@openfn/language-http"),
+          failure_flow_job = Job.new(name: "flow-job-failure", trigger: "after-test-job-failure", adaptor: "@openfn/language-http")
         ],
         triggers: [
           CriteriaTrigger.new(name: "test", criteria: %{"a" => 1}),
@@ -40,12 +40,23 @@ defmodule Engine.RunBroadcaster.UnitTest do
     job_state_repo_name = :run_broadcaster_job_state_repo_test
 
     start_supervised!({TestServer, [name: :test_run_dispatcher, owner: self()]})
+    start_supervised!({TestServer, [name: TestRepo, owner: self()]}, id: :test_repo)
+
+    start_supervised!(
+      {Engine.Adaptor.Service,
+        [
+          adaptors_path: adaptors_path = "./priv/openfn/runtime",
+          repo: TestRepo,
+          name: :test_adaptor_service
+        ]}
+    )
 
     start_supervised!(
       {RunBroadcaster,
        %RunBroadcaster.StartOpts{
          name: :test_run_broadcaster,
          run_dispatcher: :test_run_dispatcher,
+         adaptor_service: :test_adaptor_service,
          config: config,
          job_state_repo: job_state_repo_name
        }}
@@ -79,18 +90,7 @@ defmodule Engine.RunBroadcaster.UnitTest do
       %{body: %{"a" => 1}}
     )
 
-    got_a_run =
-      receive do
-        {:invoke_run, %Engine.Run{}} ->
-          true
-
-        _ ->
-          false
-      after
-        100 -> false
-      end
-
-    assert got_a_run
+    assert_received {:invoke_run, %Engine.Run{}}, 100
   end
 
   test "matches up a CronTrigger to a message", %{
@@ -103,19 +103,7 @@ defmodule Engine.RunBroadcaster.UnitTest do
       cron_trigger
     )
 
-    got_a_run =
-      receive do
-        {:invoke_run, %Engine.Run{trigger: ^cron_trigger}} ->
-          true
-
-        any ->
-          IO.puts("Got: #{inspect(any)}")
-          false
-      after
-        100 -> false
-      end
-
-    assert got_a_run
+    assert_receive {:invoke_run, %Engine.Run{trigger: ^cron_trigger}}
 
     state_path = Temp.path!(suffix: "run-broadcaster-test.json")
     File.write!(state_path, ~s({"foo": 1}))
