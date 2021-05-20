@@ -184,7 +184,8 @@ defmodule Engine.Adaptor.Service do
     |> case do
       {_stdout, 0} ->
         Logger.info("Refreshing Adaptor list")
-        agent |> Agent.update(&State.refresh_list/1, 30_000)
+        adaptors = repo.list_local(adaptors_path)
+        agent |> Agent.update(fn state -> %{state | adaptors: adaptors} end)
         {:ok, agent |> Agent.get(&State.find_adaptor(&1, {package_name, version}))}
 
       {stdout, code} ->
