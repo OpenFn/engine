@@ -51,7 +51,7 @@ defmodule Engine.MixProject do
       {:junit_formatter, "~> 3.0", only: [:test]},
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:opq, github: "fredwu/opq", ref: "08406f5"},
-      {:quantum, "~> 3.3.0"},
+      {:quantum, "~> 3.4"},
       {:rambo, "~> 0.3.4"},
       {:temp, "~> 0.4"},
       {:yaml_elixir, "~> 2.5"}
