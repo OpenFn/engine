@@ -32,7 +32,7 @@ defmodule Engine.RunDispatcher.UnitTest do
          queue: queue,
          task_supervisor: :task_supervisor,
          job_state_repo: job_state_repo_name,
-         adaptors_path: "priv/openfn/runtime",
+         adaptors_path: "priv/openfn/lib",
          run_broadcaster: run_broadcaster
        }}
     )
@@ -49,6 +49,6 @@ defmodule Engine.RunDispatcher.UnitTest do
     RunDispatcher.invoke_run(run_dispatcher, run)
 
     assert_receive {:process_run, %Run{}}, 1500
-    assert_received {:register, ^job, _}
+    assert_received {:register, _, _}
   end
 end

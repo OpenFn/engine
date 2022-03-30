@@ -51,7 +51,7 @@ defmodule Engine.Adaptor.Repo do
           --no-fund \
           --no-audit \
           --no-package-lock \
-          --global-style \
+          --global \
           --prefix #{dir} \
           #{Enum.join(adaptors, " ")}
         """

@@ -41,7 +41,7 @@ end
       ...
       MyApp.Engine, [
         project_config: "file://" <> project_yaml_path,
-        adaptors_path: Path.join(project_dir, "node_modules")
+        adaptors_path: Path.join(project_dir, "priv/openfn/lib")
       ]
     ]
 
@@ -110,6 +110,18 @@ end
 MyApp.Handler.start(run_spec)
 # => %Result{...}
 ```
+
+## Configuration
+
+### A note on `adaptors_path`:
+
+By default everything is installed into `$PWD/priv/openfn`.
+
+> Currently with the `ShellRuntime` module, we require NPM modules to be installed
+> in a global style. Just like with `npm install -g`, except we control where 
+> those packages will be installed using the `--prefix` argument.
+> Without using global installs you run the risk of new packages installed by
+> Adaptor.Service overwriting _all_ currently installed packages.
 
 ## Callbacks
 

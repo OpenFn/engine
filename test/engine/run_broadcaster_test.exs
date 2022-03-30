@@ -23,10 +23,23 @@ defmodule Engine.RunBroadcaster.UnitTest do
             Credential.new(name: "test-credential", body: %{username: "un", password: "pw"})
         ],
         jobs: [
-          test_job = Job.new(name: "test-job", trigger: "test", credential: "test-credential", adaptor: "@openfn/language-http"),
-          cron_job = Job.new(name: "cron-job", trigger: "cron-trigger", adaptor: "@openfn/language-http"),
-          success_flow_job = Job.new(name: "flow-job", trigger: "after-test-job", adaptor: "@openfn/language-http"),
-          failure_flow_job = Job.new(name: "flow-job-failure", trigger: "after-test-job-failure", adaptor: "@openfn/language-http")
+          test_job =
+            Job.new(
+              name: "test-job",
+              trigger: "test",
+              credential: "test-credential",
+              adaptor: "@openfn/language-http"
+            ),
+          cron_job =
+            Job.new(name: "cron-job", trigger: "cron-trigger", adaptor: "@openfn/language-http"),
+          success_flow_job =
+            Job.new(name: "flow-job", trigger: "after-test-job", adaptor: "@openfn/language-http"),
+          failure_flow_job =
+            Job.new(
+              name: "flow-job-failure",
+              trigger: "after-test-job-failure",
+              adaptor: "@openfn/language-http"
+            )
         ],
         triggers: [
           CriteriaTrigger.new(name: "test", criteria: %{"a" => 1}),
@@ -44,11 +57,11 @@ defmodule Engine.RunBroadcaster.UnitTest do
 
     start_supervised!(
       {Engine.Adaptor.Service,
-        [
-          adaptors_path: adaptors_path = "./priv/openfn/runtime",
-          repo: TestRepo,
-          name: :test_adaptor_service
-        ]}
+       [
+         adaptors_path: adaptors_path = "./priv/openfn/lib",
+         repo: TestRepo,
+         name: :test_adaptor_service
+       ]}
     )
 
     start_supervised!(
