@@ -31,3 +31,4 @@ excoveralls.json
 
 node_modules
 package*.json
+priv/openfn
