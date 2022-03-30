@@ -82,5 +82,5 @@ defmodule Engine.JobStateRepo do
   def get_last_persisted_state_path(server, job = %Job{}),
     do:
       GenServer.call(server, {:get_last_persisted_state_path, job})
-      |> Path.absname()
+      |> Path.relative_to_cwd()
 end

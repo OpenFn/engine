@@ -29,7 +29,14 @@ defmodule Engine.Run.Handler do
       alias Engine.Run.Handler
       @behaviour Handler
 
-      @impl Handler
+      @type handler_opts :: [
+              context: any(),
+              timeout: integer(),
+              env: %{}
+            ]
+
+      @impl true
+      @spec start(run_spec :: %RunSpec{}, opts :: handler_opts()) :: Engine.Result.t()
       def start(run_spec, opts \\ []) do
         {:ok, task_supervisor} = Task.Supervisor.start_link()
         {:ok, agent_supervisor} = DynamicSupervisor.start_link(strategy: :one_for_one)
@@ -63,7 +70,7 @@ defmodule Engine.Run.Handler do
         })
       end
 
-      @impl Handler
+      @impl true
       def log_callback(log_agent, context, args) do
         res = Engine.LogAgent.process_chunk(log_agent, args)
         res |> __MODULE__.on_log_emit(context)
@@ -110,9 +117,16 @@ defmodule Engine.Run.Handler do
         DynamicSupervisor.stop(agent_supervisor)
       end
 
+      @impl true
       defdelegate env(run_spec, opts), to: Handler
+
+      @impl true
       defdelegate on_start(context), to: Handler
+
+      @impl true
       defdelegate on_log_emit(chunk, context), to: Handler
+
+      @impl true
       defdelegate on_finish(result, context), to: Handler
 
       defoverridable Handler
@@ -122,7 +136,7 @@ defmodule Engine.Run.Handler do
   @doc """
   The entrypoint for executing a run.
   """
-  @callback start(run_spec :: %RunSpec{}, opts :: []) :: Engine.Result.t()
+  @callback start(any, opts :: []) :: any()
 
   @doc """
   Called with context, if any - when the Run has been started.
@@ -139,8 +153,15 @@ defmodule Engine.Run.Handler do
   @callback env(run_spec :: %RunSpec{}, opts :: []) :: %{binary() => binary()}
 
   def env(run_spec, opts) do
-    %{"NODE_PATH" => run_spec.adaptors_path}
+    %{}
+    |> Map.merge(node_path(run_spec.adaptors_path))
     |> Map.merge(Keyword.get(opts, :env, %{}))
     |> Map.merge(run_spec.env || %{})
+  end
+
+  defp node_path(nil), do: %{}
+
+  defp node_path(path) when is_binary(path) do
+    %{"NODE_PATH" => path}
   end
 end

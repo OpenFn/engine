@@ -30,7 +30,7 @@ defmodule Engine.Run.Handler.UnitTest do
       MyCustomHandler.start(run.run_spec,
         context: self(),
         timeout: 1000,
-        env: %{"PATH" => "./priv/openfn/runtime/node_modules/.bin:#{System.get_env("PATH")}"}
+        env: %{"PATH" => "./priv/openfn/bin:#{System.get_env("PATH")}"}
       )
 
     assert result.exit_reason == :killed
@@ -46,7 +46,7 @@ defmodule Engine.Run.Handler.UnitTest do
 
     result =
       MyCustomHandler.start(run.run_spec,
-        env: %{"PATH" => "./priv/openfn/runtime/node_modules/.bin:#{System.get_env("PATH")}"},
+        env: %{"PATH" => "./priv/openfn/bin:#{System.get_env("PATH")}"},
         context: self()
       )
 
@@ -59,10 +59,7 @@ defmodule Engine.Run.Handler.UnitTest do
   test "calls uses the env from a RunSpec" do
     run = %Run{
       job: %Engine.Job{name: "test-job"},
-      run_spec:
-        run_spec_fixture(
-          env: %{"PATH" => "./priv/openfn/runtime/node_modules/.bin:#{System.get_env("PATH")}"}
-        )
+      run_spec: run_spec_fixture(env: %{"PATH" => "./priv/openfn/bin:#{System.get_env("PATH")}"})
     }
 
     result =

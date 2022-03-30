@@ -11,7 +11,7 @@ defmodule Engine.Adaptor.Service.Test do
       start_supervised!(
         {Service,
          [
-           adaptors_path: adaptors_path = "./priv/openfn/runtime",
+           adaptors_path: adaptors_path = "./priv/openfn/lib",
            repo: TestRepo
          ]}
       )

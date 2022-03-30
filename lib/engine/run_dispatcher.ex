@@ -56,11 +56,15 @@ defmodule Engine.RunDispatcher do
       File.mkdir_p!(basedir)
     end
 
+    # TODO: Remove the relative lookup for `bin`.
+    # With global installs, there is a prefix and under that two folders:
+    # `lib` and `bin`, with lib needing to go to `NODE_PATH` and bin to be
+    # added to $PATH.
     {:ok,
      %{
        opts
        | handler_env: %{
-           "PATH" => "#{opts.adaptors_path}/node_modules/.bin:#{System.get_env("PATH")}"
+           "PATH" => "#{opts.adaptors_path}/../bin:#{System.get_env("PATH")}"
          }
      }}
   end

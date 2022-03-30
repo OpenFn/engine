@@ -10,7 +10,7 @@ defmodule Mix.Tasks.Openfn.Install.Runtime do
 
   use Mix.Task
 
-  @default_path "priv/openfn/runtime"
+  @default_path "priv/openfn"
 
   def run(_) do
     Rambo.run("/usr/bin/env", ~w(which node))
@@ -38,9 +38,7 @@ defmodule Mix.Tasks.Openfn.Install.Runtime do
       [
         "sh",
         "-c",
-        "npm install --prefix $NODE_PATH --no-save --no-package-lock --global-style #{
-          package_list
-        }"
+        "npm install --prefix $NODE_PATH --global #{package_list}"
       ],
       env: [{"NODE_PATH", @default_path}],
       stderr_to_stdout: true,
