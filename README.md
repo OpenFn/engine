@@ -11,7 +11,7 @@ by adding `openfn_engine` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:engine, github: "OpenFn/engine", tag: "v0.3.2"}
+    {:engine, github: "OpenFn/engine", tag: "v0.4.0"}
   ]
 end
 ```
