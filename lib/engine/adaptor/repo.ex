@@ -1,21 +1,19 @@
 defmodule Engine.Adaptor.Repo do
   @callback list_local(path :: String.t()) :: list(Engine.Adaptor.t())
-  def list_local(path, depth \\ 4) when is_binary(path) do
-    System.cmd("find", ~w[#{path} -maxdepth #{depth} -type f -name package.json])
+  def list_local(path, _depth \\ 4) when is_binary(path) do
+    System.cmd("npm", ~w[list --global --json --long --prefix #{path}])
     |> case do
       {stdout, 0} ->
         stdout
         |> String.trim()
-        |> String.split("\n")
-        |> filter_parent_paths()
-        |> Enum.map(fn package_json ->
-          res = Jason.decode!(File.read!(package_json))
-          get = &Map.get(res, &1)
-
+        |> Jason.decode!()
+        |> Map.get("dependencies", %{})
+        |> Enum.map(fn {local_name, details} ->
           %Engine.Adaptor{
-            name: get.("name"),
-            version: get.("version"),
-            path: String.replace_suffix(package_json, "/package.json", ""),
+            name: details["name"],
+            version: details["version"],
+            path: details["path"],
+            local_name: local_name,
             status: :present
           }
         end)

@@ -57,7 +57,7 @@ defmodule Engine.Adaptor.Service.Test do
 
     assert_receive {:install,
                     [
-                      "@openfn/language-common-v1.2.7@npm:@openfn/language-common@1.2.7",
+                      "@openfn/language-common-1.2.7@npm:@openfn/language-common@1.2.7",
                       ^adaptors_path
                     ]},
                    100
@@ -66,7 +66,7 @@ defmodule Engine.Adaptor.Service.Test do
   end
 
   test "build_aliased_name" do
-    assert "@openfn/language-common-v1.2.6@npm:@openfn/language-common@1.2.6" ==
+    assert "@openfn/language-common-1.2.6@npm:@openfn/language-common@1.2.6" ==
              Service.build_aliased_name({"@openfn/language-common", "1.2.6"})
   end
 end

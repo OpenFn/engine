@@ -15,7 +15,7 @@ defmodule Engine.Adaptor.Service do
 
   ## Installing Adaptors
 
-  Using the `install/3` function an adaptor can be installed, which will also
+  Using the `install/2` function an adaptor can be installed, which will also
   add it to the list of available adaptors.
 
   The adaptor is marked as `:installing`, to allow for conditional behaviour
@@ -169,6 +169,8 @@ defmodule Engine.Adaptor.Service do
     end
   end
 
+  @spec install!(Agent.agent(), package_spec()) ::
+          {:ok, Engine.Adaptor.t()} | {:error, {Collectable.t(), exit_status :: non_neg_integer}}
   def install!(agent, {package_name, version} = package_spec) do
     new_adaptor = %Engine.Adaptor{name: package_name, version: version, status: :installing}
 
@@ -220,7 +222,7 @@ defmodule Engine.Adaptor.Service do
   to rely on npms built-in package aliasing.
 
   E.g. `@openfn/language-http@1.2.8` turns into:
-       `@openfn/language-http-v1.2.8@npm:@openfn/language-http@1.2.8`
+       `@openfn/language-http-1.2.8@npm:@openfn/language-http@1.2.8`
 
   Which is pretty long winded but necessary for the reason above.
 
@@ -228,6 +230,6 @@ defmodule Engine.Adaptor.Service do
   to suit your particular naming strategy.
   """
   def build_aliased_name({package, version}) do
-    "#{package}-v#{version}@npm:#{package}@#{version}"
+    "#{package}-#{version}@npm:#{package}@#{version}"
   end
 end

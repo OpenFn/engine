@@ -39,6 +39,6 @@ defmodule TestRepo do
   @impl Engine.Adaptor.Repo
   def install(name, dir) do
     GenServer.call(__MODULE__, {:install, [name, dir]})
-    {:ok, ""}
+    {:ok, 0}
   end
 end

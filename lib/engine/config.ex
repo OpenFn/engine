@@ -110,7 +110,15 @@ defmodule Engine.Config do
   end
 
   @doc """
-  Parse a config YAML file from the filesystem.
+  Parse a config YAML file from the filesystem or a string.
+
+    ## Examples
+
+      iex> parse("file://my_config.yaml")
+      %Engine.Config{}
+
+      iex> parse("jobs:\n  job-1:\n    ...")
+      %Engine.Config{}
   """
   def parse("file://" <> path) do
     YamlElixir.read_from_file(path)
@@ -123,9 +131,6 @@ defmodule Engine.Config do
     end
   end
 
-  @doc """
-  Parse a config string of YAML.
-  """
   def parse(str) do
     {:ok, data} = YamlElixir.read_from_string(str)
 

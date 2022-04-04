@@ -6,11 +6,12 @@ defmodule Engine.Adaptor do
           name: binary(),
           version: binary(),
           path: binary(),
-          status: install_status()
+          status: install_status(),
+          local_name: binary()
         }
 
   @enforce_keys [:name, :version]
-  defstruct @enforce_keys ++ [:status, :path]
+  defstruct @enforce_keys ++ [:status, :path, :local_name]
 
   def set_present(adaptor) do
     %{adaptor | status: :present}
