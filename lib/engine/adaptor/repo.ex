@@ -18,6 +18,9 @@ defmodule Engine.Adaptor.Repo do
           }
         end)
 
+      {_, 254} ->
+        raise "No such directory: #{path}"
+
       {stdout, _} ->
         raise "Failed to list adaptors from path: #{path}\n#{stdout}"
     end
