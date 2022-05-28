@@ -12,6 +12,7 @@ defmodule Engine.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      compilers: [:rambo],
 
       # Docs
       name: "Engine",
