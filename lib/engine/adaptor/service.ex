@@ -75,12 +75,6 @@ defmodule Engine.Adaptor.Service do
       Enum.find(adaptors, fun)
     end
 
-    def find_adaptor(state, {package_name, version}) do
-      find_adaptor(state, fn %{name: n, version: v} ->
-        n == package_name && (v == version || is_nil(version))
-      end)
-    end
-
     def refresh_list(state) do
       %{state | adaptors: state.repo.list_local(state.adaptors_path)}
     end
@@ -188,7 +182,7 @@ defmodule Engine.Adaptor.Service do
         Logger.info("Refreshing Adaptor list")
         adaptors = repo.list_local(adaptors_path)
         agent |> Agent.update(fn state -> %{state | adaptors: adaptors} end)
-        {:ok, agent |> Agent.get(&State.find_adaptor(&1, {package_name, version}))}
+        {:ok, find_adaptor(agent, {package_name, version})}
 
       {stdout, code} ->
         agent

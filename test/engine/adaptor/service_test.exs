@@ -63,6 +63,19 @@ defmodule Engine.Adaptor.Service.Test do
                    100
 
     assert_receive {:list_local, ^adaptors_path}, 100
+
+    result = Service.install!(service, {"@openfn/language-common", "latest"})
+
+    refute result == {:ok, nil}
+
+    assert_receive {:install,
+                    [
+                      "@openfn/language-common-latest@npm:@openfn/language-common@latest",
+                      ^adaptors_path
+                    ]},
+                   100
+
+    assert_receive {:list_local, ^adaptors_path}, 100
   end
 
   test "build_aliased_name" do
