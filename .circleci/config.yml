@@ -1,11 +1,10 @@
-# Elixir CircleCI 2.0 configuration file
-# Check https://circleci.com/docs/2.0/language-elixir/ for more details
-version: 2
+# Check https://circleci.com/docs/3.0/language-elixir/ for more details
+version: 2.1
 jobs:
   build:
     parallelism: 1
     docker:
-      - image: circleci/elixir:1.13.4-node
+      - image: cimg/elixir:1.13.4-erlang-24.3-node
         environment:
           MIX_ENV: test
 
