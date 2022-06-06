@@ -94,18 +94,18 @@ defmodule Engine.Run.Handler do
             stop(state)
             result
 
-          {:DOWN, ^run_task_ref, :process, _pid, _exp} ->
+          {:DOWN, ^run_task_ref, :process, _pid, reason} ->
             stop(state)
             # This means that the task, and therefore Rambo finished without
             # either a value or an exception, in all reasonable circumstances
             # this should not be reached.
-            raise "ShellRuntime task exited without a value"
+            raise "ShellRuntime task exited without a value:\n#{inspect(reason)}"
 
-          {:DOWN, ^log_agent_ref, :process, _pid, _exp} ->
+          {:DOWN, ^log_agent_ref, :process, _pid, reason} ->
             stop(state)
             # Something when wrong in the logger, when/if this gets reached
             # we need to decide what we want to be done.
-            raise "Logging agent process ended prematurely"
+            raise "Logging agent process ended prematurely:\n#{inspect(reason)}"
         end
       end
 
