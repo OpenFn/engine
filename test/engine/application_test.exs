@@ -3,15 +3,15 @@ defmodule TestApp do
 
   use Engine.Application,
     project_config: fixture(:project_config, :yaml),
-    job_state_basedir: Temp.path!(),
-    adaptors_path: "./priv/openfn/lib",
+    # job_state_basedir: Temp.path!() |> IO.inspect(),
+    adaptors_path: Path.join(__DIR__, "../../priv/openfn") |> Path.expand(),
     otp_app: :engine
 end
 
 defmodule AppConfigured do
   use Engine.Application,
     otp_app: :engine,
-    adaptors_path: "./priv/openfn/lib"
+    adaptors_path: Path.join(__DIR__, "../../priv/openfn") |> Path.expand()
 end
 
 defmodule Engine.Application.UnitTest do
@@ -27,7 +27,7 @@ defmodule Engine.Application.UnitTest do
       Engine,
       [
         project_config: fixture(:project_config, :yaml),
-        adaptors_path: "./priv/openfn/lib",
+        adaptors_path: Path.join(__DIR__, "../../priv/openfn") |> Path.expand(),
         name: TestApp
       ]
     })
