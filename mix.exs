@@ -1,14 +1,14 @@
 defmodule Engine.MixProject do
   use Mix.Project
 
-  @version "0.5.2"
+  @version "0.6.0"
   @source_url "https://github.com/OpenFn/engine"
 
   def project do
     [
       app: :engine,
       version: @version,
-      elixir: "~> 1.10",
+      elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
