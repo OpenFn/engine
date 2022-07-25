@@ -21,9 +21,6 @@ jobs:
         description: Elixir version
         type: string
         default: *default_version
-      execute:
-        description: What steps to execute after build
-        type: steps
 
     parallelism: 1
 
