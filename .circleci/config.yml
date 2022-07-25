@@ -1,15 +1,38 @@
 # Check https://circleci.com/docs/3.0/language-elixir/ for more details
 version: 2.1
+
+default_version: &default_version 1.13.4
+
+commands:
+  install_node:
+    steps:
+      - run:
+          name: "Install Node.js and npm"
+          command: |
+            curl -sSL "https://nodejs.org/dist/v16.15.0/node-v16.15.0-linux-x64.tar.gz" | tar --strip-components=1 -xz -C /usr/local
+      - run:
+          name: Check current version of node
+          command: node -v
+
 jobs:
   build:
+    parameters:
+      version:
+        description: Elixir version
+        type: string
+        default: *default_version
+
     parallelism: 1
+
     docker:
-      - image: cimg/elixir:1.13.4-erlang-24.3-node
+      - image: elixir:<< parameters.version >>
         environment:
           MIX_ENV: test
 
     working_directory: ~/repo
+
     steps:
+      - install_node
       - checkout
 
       - run: mkdir ./tmp
