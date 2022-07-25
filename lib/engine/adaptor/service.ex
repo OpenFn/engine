@@ -120,12 +120,12 @@ defmodule Engine.Adaptor.Service do
 
   defp by_name_and_requirement(adaptor, matcher = %Regex{}, requirement) do
     !!(Regex.match?(matcher, adaptor.name) &&
-         Version.match?(adaptor.version, requirement))
+         Version.match?(adaptor.version, requirement, allow_pre: false))
   end
 
   defp by_name_and_requirement(adaptor, name, requirement) do
     !!(match?(%{name: ^name}, adaptor) &&
-         Version.match?(adaptor.version, requirement))
+         Version.match?(adaptor.version, requirement, allow_pre: false))
   end
 
   defp version_to_requirement(version) do
@@ -137,7 +137,7 @@ defmodule Engine.Adaptor.Service do
         raise ArgumentError, message: "Version specs not implemented yet."
 
       true ->
-        version
+        "== #{version}"
     end
     |> Version.parse_requirement!()
   end
@@ -195,7 +195,7 @@ defmodule Engine.Adaptor.Service do
   end
 
   def resolve_package_name(package_name) when is_binary(package_name) do
-    ~r/(@?[\/\d\n\w-]+)(?:@([\d\.\w]+))?$/
+    ~r/(@?[\/\d\n\w-]+)(?:@([\d\.\w-]+))?$/
     |> Regex.run(package_name)
     |> case do
       [_, name, version] ->

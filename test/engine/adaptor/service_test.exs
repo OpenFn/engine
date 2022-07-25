@@ -5,7 +5,7 @@ defmodule Engine.Adaptor.Service.Test do
   alias Engine.Adaptor.Service
 
   setup do
-    start_supervised!({TestServer, [name: TestRepo, owner: self()]})
+    start_supervised!({TestServer, [name: TestRepo, owner: self()]}, id: :adaptor_service_test)
 
     service =
       start_supervised!(
@@ -26,6 +26,7 @@ defmodule Engine.Adaptor.Service.Test do
   test "can tell if something is installed or not", %{service: service} do
     assert Service.installed?(service, {"@openfn/core", "1.3.12"})
     assert Service.installed?(service, {"@openfn/core", nil})
+    assert Service.installed?(service, {"@openfn/language-common", nil})
     refute Service.installed?(service, {"@openfn/core", "1.4.0"})
   end
 
@@ -45,11 +46,25 @@ defmodule Engine.Adaptor.Service.Test do
     %Adaptor{name: "@openfn/core", version: "1.3.12"} =
       Service.find_adaptor(service, "@openfn/core@latest")
 
+    %Adaptor{name: "@openfn/language-common", version: "2.0.0-pre2"} =
+      Service.find_adaptor(service, {"@openfn/language-common", "2.0.0-pre2"})
+
     %Adaptor{name: "@openfn/language-common", version: "1.2.8"} =
       Service.find_adaptor(service, {"@openfn/language-common", "latest"})
 
+    %Adaptor{name: "@openfn/language-common", version: "1.2.8"} =
+      Service.find_adaptor(service, {"@openfn/language-common", "1.2.8"})
+
     %Adaptor{name: "@openfn/language-common", version: "1.2.6"} =
       Service.find_adaptor(service, {"@openfn/language-common", "1.2.6"})
+  end
+
+  test "can resolve package names to package_spec" do
+    assert Service.resolve_package_name("@openfn/language-common@latest") ==
+             {"@openfn/language-common", "latest"}
+
+    assert Service.resolve_package_name("@openfn/language-common@2.0.0-rc1") ==
+             {"@openfn/language-common", "2.0.0-rc1"}
   end
 
   test "can install an adaptor from npm", %{service: service, adaptors_path: adaptors_path} do

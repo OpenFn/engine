@@ -1,5 +1,5 @@
 defmodule Engine.RunBroadcaster.UnitTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   alias Engine.{
     JobStateRepo,
@@ -52,7 +52,10 @@ defmodule Engine.RunBroadcaster.UnitTest do
 
     job_state_repo_name = :run_broadcaster_job_state_repo_test
 
-    start_supervised!({TestServer, [name: :test_run_dispatcher, owner: self()]})
+    start_supervised!({TestServer, [name: :test_run_dispatcher, owner: self()]},
+      id: :test_run_dispatcher
+    )
+
     start_supervised!({TestServer, [name: TestRepo, owner: self()]}, id: :test_repo)
 
     start_supervised!(
