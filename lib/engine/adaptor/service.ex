@@ -224,6 +224,6 @@ defmodule Engine.Adaptor.Service do
   to suit your particular naming strategy.
   """
   def build_aliased_name({package, version}) do
-    "#{package}-#{version || "latest"}@npm:#{package}@#{version || "latest"}" |> IO.inspect()
+    "#{package}-#{version || "latest"}@npm:#{package}@#{version || "latest"}"
   end
 end
