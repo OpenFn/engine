@@ -1,5 +1,5 @@
 defmodule Engine.RunDispatcher.UnitTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   alias Engine.{RunDispatcher, Run, Job, RunTask}
   import Engine.TestUtil, only: [run_spec_fixture: 0]
@@ -16,12 +16,12 @@ defmodule Engine.RunDispatcher.UnitTest do
     start_supervised!({Task.Supervisor, [name: :task_supervisor]})
 
     start_supervised!(%{
-      id: :fake_run_broadcaster,
+      id: :run_dispatcher_test_run_broadcaster,
       start: {TestServer, :start_link, [[name: run_broadcaster, owner: self()]]}
     })
 
     start_supervised!(%{
-      id: :fake_job_repo,
+      id: :run_dispatcher_test_job_repo,
       start: {TestServer, :start_link, [[name: job_state_repo_name, owner: self()]]}
     })
 
@@ -32,7 +32,7 @@ defmodule Engine.RunDispatcher.UnitTest do
          queue: queue,
          task_supervisor: :task_supervisor,
          job_state_repo: job_state_repo_name,
-         adaptors_path: "priv/openfn/lib",
+         adaptors_path: "priv/openfn",
          run_broadcaster: run_broadcaster
        }}
     )

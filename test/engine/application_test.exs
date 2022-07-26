@@ -3,7 +3,7 @@ defmodule TestApp do
 
   use Engine.Application,
     project_config: fixture(:project_config, :yaml),
-    # job_state_basedir: Temp.path!() |> IO.inspect(),
+    job_state_basedir: Temp.path!(),
     adaptors_path: Path.join(__DIR__, "../../priv/openfn") |> Path.expand(),
     otp_app: :engine
 end
@@ -58,7 +58,7 @@ defmodule Engine.Application.UnitTest do
     Process.sleep(1000)
 
     Engine.JobStateRepo.get_last_persisted_state_path(
-      TestApp.config(:job_state_repo_name),
+      AppConfigured.config(:job_state_repo_name),
       %Engine.Job{name: "job-2"}
     )
     |> File.stat!()
