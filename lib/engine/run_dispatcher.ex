@@ -64,7 +64,7 @@ defmodule Engine.RunDispatcher do
      %{
        opts
        | handler_env: %{
-           "PATH" => "#{opts.adaptors_path}/../bin:#{System.get_env("PATH")}"
+           "PATH" => "#{opts.adaptors_path}/bin:#{System.get_env("PATH")}"
          }
      }}
   end
@@ -89,6 +89,8 @@ defmodule Engine.RunDispatcher do
 
       if result.exit_code == 0 do
         JobStateRepo.register(state.job_state_repo, run.job, run.run_spec.final_state_path)
+      else
+        Logger.debug(fn -> "Run Failed with:\n#{inspect(result, pretty: true)}" end)
       end
 
       RunBroadcaster.process(

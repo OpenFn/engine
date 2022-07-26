@@ -11,7 +11,7 @@ defmodule Engine.TestUtil do
         expression_path: write_temp!(~s[alterState((state) => state)]),
         state_path: write_temp!(~s[{"foo": "bar"}]),
         adaptor: "@openfn/language-common",
-        adaptors_path: "./priv/openfn/lib",
+        adaptors_path: "./priv/openfn",
         final_state_path: Temp.path!()
       })
     )
