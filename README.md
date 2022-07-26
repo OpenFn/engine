@@ -41,7 +41,7 @@ end
       ...
       MyApp.Engine, [
         project_config: "file://" <> project_yaml_path,
-        adaptors_path: Path.join(project_dir, "priv/openfn/lib")
+        adaptors_path: Path.join(project_dir, "priv/openfn")
       ]
     ]
 

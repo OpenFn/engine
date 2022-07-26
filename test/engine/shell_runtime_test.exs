@@ -35,7 +35,7 @@ defmodule Engine.ShellRuntimeTest do
 
     assert {:error, result} =
              Engine.ShellRuntime.run(run_spec,
-               env: %{"PATH" => "#{run_spec.adaptors_path}/../bin:#{System.get_env("PATH")}"}
+               env: %{"PATH" => "#{run_spec.adaptors_path}/bin:#{System.get_env("PATH")}"}
              )
 
     # NOTE: we don't appear to get an exit code
