@@ -45,7 +45,7 @@ defmodule Engine.MixProject do
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:ex_doc, "~> 0.22", only: :dev, runtime: false},
-      {:excoveralls, "~> 0.11.2", only: [:test]},
+      {:excoveralls, "~> 0.14.6", only: [:test]},
       {:exjsonpath, "~> 0.1"},
       {:jason, "~> 1.2"},
       {:junit_formatter, "~> 3.0", only: [:test]},
