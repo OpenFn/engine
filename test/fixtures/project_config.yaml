@@ -11,6 +11,7 @@ jobs:
     expression: none
     adaptor: "@openfn/language-common"
     trigger: trigger-3
+    credential: credential-1
   job-3:
     expression: >
       alterState((state) => {
@@ -19,6 +20,7 @@ jobs:
       })
     adaptor: "@openfn/language-common"
     trigger: trigger-4
+    credential: credential-1
 
 triggers:
   trigger-2:
@@ -34,3 +36,6 @@ credentials:
   credential-1:
     username: "sample@example.com"
     password: "shhh"
+  credential-2:
+    username: "second-credential@example.com"
+    password: "password"

@@ -131,7 +131,7 @@ defmodule Engine.RunBroadcaster do
               %{}
           end
 
-        next_state = %{"configuration" => Config.credential_body_for(config, job)}
+        next_state = %{"configuration" => Config.credential_body_for(config, triggered_job)}
 
         initial_state = merge_states([source_state, next_state])
 
