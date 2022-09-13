@@ -33,7 +33,12 @@ defmodule Engine.RunBroadcaster.UnitTest do
           cron_job =
             Job.new(name: "cron-job", trigger: "cron-trigger", adaptor: "@openfn/language-http"),
           success_flow_job =
-            Job.new(name: "flow-job", trigger: "after-test-job", adaptor: "@openfn/language-http"),
+            Job.new(
+              name: "flow-job",
+              trigger: "after-test-job",
+              adaptor: "@openfn/language-http",
+              credential: "test-credential"
+            ),
           failure_flow_job =
             Job.new(
               name: "flow-job-failure",
@@ -61,7 +66,7 @@ defmodule Engine.RunBroadcaster.UnitTest do
     start_supervised!(
       {Engine.Adaptor.Service,
        [
-         adaptors_path: adaptors_path = "./priv/openfn/lib",
+         adaptors_path: "./priv/openfn/lib",
          repo: TestRepo,
          name: :test_adaptor_service
        ]}
@@ -190,7 +195,7 @@ defmodule Engine.RunBroadcaster.UnitTest do
       %Run{
         trigger: ^failure_flow_trigger,
         job: ^failure_flow_job,
-        initial_state: %{"foo" => "bar"}
+        initial_state: %{"foo" => "bar", "configuration" => nil}
       }
     }
 
