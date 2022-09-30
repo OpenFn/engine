@@ -13,6 +13,7 @@ jobs:
     steps:
       - checkout
 
+      - run: elixir --version
       - run: mkdir ./tmp
       - run: mix local.hex --force
       - run: mix local.rebar --force
