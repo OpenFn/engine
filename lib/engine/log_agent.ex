@@ -23,10 +23,6 @@ defmodule Engine.LogAgent do
 
     @spec process_chunk(data :: any(), state :: LogState.t()) :: {binary() | nil, LogState.t()}
     def process_chunk(data, {buffer, chunk_state}) do
-      IO.inspect(data, label: "data in p_c")
-      IO.inspect(buffer, label: "buffer")
-      IO.inspect(chunk_state, label: "chunk_state")
-
       reduce_chunk(data, chunk_state)
       |> case do
         {nil, chunk_state} ->
@@ -42,17 +38,10 @@ defmodule Engine.LogAgent do
     def reduce_chunk(data, {partial, pending}) do
       next = pending <> data
 
-      IO.inspect(pending, label: "pending", limit: :infinity)
-      IO.inspect(data, label: "data in r_c", limit: :infinity)
-      IO.inspect(next, label: "next", limit: :infinity)
-
       Enum.reduce_while(
         0..byte_size(next),
         {partial, String.next_grapheme(next)},
         fn _, {chunk, grapheme_result} ->
-          IO.inspect(chunk, label: "chunk", limit: :infinity)
-          IO.inspect(grapheme_result, label: "grapheme result", limit: :infinity)
-
           case grapheme_result do
             # char is utf-8
             {next_char, rest} ->
@@ -70,13 +59,9 @@ defmodule Engine.LogAgent do
     end
 
     defp merge_grapheme_result(chunk, {next_char, rest}) do
-      if is_list(rest) do
-        IO.inspect(chunk, label: "chunk")
-        IO.inspect(next_char, label: "next_char")
-        IO.inspect(rest, label: "rest")
-      end
+      str = if is_list(rest), do: Enum.join(rest, " "), else: rest
 
-      {chunk <> IO.iodata_to_binary(next_char), String.next_grapheme(rest) || {"", ""}}
+      {chunk <> IO.iodata_to_binary(next_char), String.next_grapheme(str) || {"", ""}}
     end
   end
 

@@ -3,36 +3,43 @@ defmodule Engine.LogAgent.UnitTest do
 
   alias Engine.LogAgent
 
-  test "process_chunk/2 handles 255s" do
-    {:ok, agent} = LogAgent.start_link()
+  test "reduce chunk" do
+    partial = ""
 
-    example = ~s[
-      "ok"
-    ]
+    next =
+      <<114, 101, 102, 101, 114, 114, 97, 108, 95, 102, 114, 111, 109, 95, 111, 115, 99, 97, 114,
+        34, 44, 10, 32, 32, 32, 32, 32, 32, 32, 32, 34, 111, 115, 99, 97, 114, 95, 99, 97, 115,
+        101, 95, 119, 111, 114, 107, 101, 114, 95, 110, 97, 109, 101, 34, 58, 32, 34, 225, 158,
+        128, 225, 158, 185, 225>>
 
-    example
-    |> chunk_string(64)
-    |> Enum.each(fn chunk ->
-      LogAgent.process_chunk(agent, {:stdout, chunk})
-    end)
+    bad_thing = <<225, 158, 128, 225, 158, 185, 225>>
 
-    buffer = LogAgent.buffer(agent)
-    assert length(buffer) == 2
-    assert buffer |> Enum.join() == example
+    list =
+      :erlang.binary_to_list(bad_thing)
+      |> IO.inspect(label: "bad_thing binary_to_list")
 
-    Agent.stop(agent)
+    List.to_string(list)
+    |> IO.inspect(label: "list to string")
 
-    {:ok, agent} = LogAgent.start_link()
+    Enum.join(for <<c::utf8 <- bad_thing>>, do: <<c::utf8>>)
+    |> IO.inspect(label: "A representation of the bad thing")
 
-    emoji_string = String.duplicate(".", 63) <> "💣"
+    is_bitstring(bad_thing)
+    |> IO.inspect(label: "is bitstring")
 
-    first_chunk = LogAgent.process_chunk(agent, {:stdout, binary_part(emoji_string, 0, 64)})
-    second_chunk = LogAgent.process_chunk(agent, {:stdout, binary_part(emoji_string, 64, 3)})
+    String.next_grapheme(bad_thing)
+    |> IO.inspect(label: "bad_thing in")
 
-    assert first_chunk == nil
-    assert second_chunk == emoji_string
+    chunk_state = {"", ""}
 
-    Agent.stop(agent)
+    data =
+      <<114, 101, 102, 101, 114, 114, 97, 108, 95, 102, 114, 111, 109, 95, 111, 115, 99, 97, 114,
+        34, 44, 10, 32, 32, 32, 32, 32, 32, 32, 32, 34, 111, 115, 99, 97, 114, 95, 99, 97, 115,
+        101, 95, 119, 111, 114, 107, 101, 114, 95, 110, 97, 109, 101, 34, 58, 32, 34, 225, 158,
+        128, 225, 158, 185, 225>>
+
+    assert {nil, {"referral_from_oscar\",\n        \"oscar_case_worker_name\": \"កឹ", <<225>>}} ==
+             Engine.LogAgent.LogState.reduce_chunk(data, chunk_state)
   end
 
   test "process_chunk/2" do
