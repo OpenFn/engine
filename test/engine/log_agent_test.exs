@@ -3,6 +3,38 @@ defmodule Engine.LogAgent.UnitTest do
 
   alias Engine.LogAgent
 
+  test "process_chunk/2 handles 255s" do
+    {:ok, agent} = LogAgent.start_link()
+
+    example = ~s[
+      "ok"
+    ]
+
+    example
+    |> chunk_string(64)
+    |> Enum.each(fn chunk ->
+      LogAgent.process_chunk(agent, {:stdout, chunk})
+    end)
+
+    buffer = LogAgent.buffer(agent)
+    assert length(buffer) == 2
+    assert buffer |> Enum.join() == example
+
+    Agent.stop(agent)
+
+    {:ok, agent} = LogAgent.start_link()
+
+    emoji_string = String.duplicate(".", 63) <> "💣"
+
+    first_chunk = LogAgent.process_chunk(agent, {:stdout, binary_part(emoji_string, 0, 64)})
+    second_chunk = LogAgent.process_chunk(agent, {:stdout, binary_part(emoji_string, 64, 3)})
+
+    assert first_chunk == nil
+    assert second_chunk == emoji_string
+
+    Agent.stop(agent)
+  end
+
   test "process_chunk/2" do
     {:ok, agent} = LogAgent.start_link()
 
