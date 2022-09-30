@@ -2,7 +2,7 @@
 # Check https://circleci.com/docs/2.0/language-elixir/ for more details
 version: 2
 jobs:
-  test on elixir 1.11:
+  "elixir 1.11":
     parallelism: 1
     docker:
       - image: circleci/elixir:1.11.3-node
@@ -23,7 +23,7 @@ jobs:
       - store_test_results:
           path: ./tmp
 
-  test on elixir 1.13:
+  "elixir 1.13":
     parallelism: 1
     docker:
       - image: circleci/elixir:1.13.4-node
@@ -43,3 +43,13 @@ jobs:
 
       - store_test_results:
           path: ./tmp
+
+workflows:
+  version: 2
+  "elixir 1.11":
+    jobs:
+      - "elixir 1.11"
+
+  "elixir 1.13":
+    jobs:
+      - "elixir 1.13"
