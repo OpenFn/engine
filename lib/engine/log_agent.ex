@@ -1,6 +1,8 @@
 defmodule Engine.LogAgent do
   @type logline :: {timestamp :: integer(), type :: :stdout | :stderr, line :: binary()}
 
+  require Logger
+
   defmodule LogState do
     @typep buffer :: [binary()]
     @typep chunk_state :: {bitstring(), bitstring()}
@@ -59,7 +61,13 @@ defmodule Engine.LogAgent do
     end
 
     defp merge_grapheme_result(chunk, {next_char, rest}) do
-      str = if is_list(rest), do: Enum.join(rest, " "), else: rest
+      str =
+        if is_bitstring(rest) do
+          rest
+        else
+          Logger.warn(fn -> "Non-bitstring detected: #{inspect(rest)}" end)
+          <<>>
+        end
 
       {chunk <> IO.iodata_to_binary(next_char), String.next_grapheme(str) || {"", ""}}
     end
