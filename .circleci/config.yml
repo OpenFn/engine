@@ -13,15 +13,15 @@ jobs:
     steps:
       - checkout
 
-      - run: mkdir ./tmp
+      - run: mkdir ./tmp11
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix do deps.get, compile
       - run: mix openfn.install.runtime
-      - run: mix coveralls.json -o ./tmp
+      - run: mix coveralls.json -o ./tmp11
 
       - store_test_results:
-          path: ./tmp
+          path: ./tmp11
 
   "elixir 1.13":
     parallelism: 1
@@ -34,15 +34,15 @@ jobs:
     steps:
       - checkout
 
-      - run: mkdir ./tmp
+      - run: mkdir ./tmp13
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix do deps.get, compile
       - run: mix openfn.install.runtime
-      - run: mix coveralls.json -o ./tmp
+      - run: mix coveralls.json -o ./tmp13
 
       - store_test_results:
-          path: ./tmp
+          path: ./tmp13
 
 workflows:
   version: 2
