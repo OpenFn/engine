@@ -5,7 +5,7 @@ jobs:
   build:
     parallelism: 1
     docker:
-      - image: cimg/elixir:1.13-node
+      - image: cimg/elixir:1.13.4-erlang-24.3-node
         environment:
           MIX_ENV: test
 
