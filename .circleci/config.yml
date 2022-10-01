@@ -1,6 +1,16 @@
-# Elixir CircleCI 2.0 configuration file
-# Check https://circleci.com/docs/2.0/language-elixir/ for more details
-version: 2
+version: 2.1
+
+commands:
+  install_node:
+    steps:
+      - run:
+          name: "Install Node.js and npm"
+          command: |
+            curl -sSL "https://nodejs.org/dist/v16.17.1/node-v16.17.1-linux-x64.tar.gz" | tar --strip-components=1 -xz -C /usr/local
+      - run:
+          name: Check current version of node
+          command: node -v
+
 jobs:
   build:
     parallelism: 1
