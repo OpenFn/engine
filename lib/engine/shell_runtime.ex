@@ -34,9 +34,6 @@ defmodule Engine.ShellRuntime do
     )
     |> case do
       {msg, %Rambo{} = res} ->
-        IO.inspect(msg, label: "msg")
-        IO.inspect(res, label: "res")
-
         {msg,
          %Result{
            exit_reason: msg,
