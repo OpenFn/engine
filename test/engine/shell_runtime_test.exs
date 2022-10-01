@@ -41,12 +41,13 @@ defmodule Engine.ShellRuntimeTest do
     assert result.exit_reason == :error
     assert String.contains?(Enum.join(result.log, "\n"), "heap out of memory")
 
-    # TODO: In newer node and/or rambo version, the exit code is is nil here...
-    # TODO: ... instead of 134. Should engine ALWAYS provide an exit code to...
-    # TODO: ... the application that calls it, or should we allow it to send...
-    # TODO: ... back exit_code nil?
+    # NOTE: In newer node and/or rambo version, the exit code is is nil here
+    # instead of 134. Should engine ALWAYS provide an exit code to the
+    # application that calls it, or should we allow it to send exit_code nil?
 
     # NOTE: since platform and lightning handle the `nil` code, we don't enforce
+    # it here. This is the same as it is on newer versions of engine.
+
     # assert result.exit_code == 134
   end
 end
