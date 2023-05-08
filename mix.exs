@@ -12,6 +12,7 @@ defmodule Engine.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      compilers: Mix.compilers() ++ [:rambo],
 
       # Docs
       name: "Engine",
@@ -52,7 +53,7 @@ defmodule Engine.MixProject do
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:opq, github: "fredwu/opq", ref: "08406f5"},
       {:quantum, "~> 3.4"},
-      {:rambo, "~> 0.3.4"},
+      {:rambo, git: "https://github.com/jayjun/rambo.git", ref: "ad6307b"},
       {:temp, "~> 0.4"},
       {:yaml_elixir, "~> 2.5"}
     ]
